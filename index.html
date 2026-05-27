@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>総合受付システム</title>
+    <style>
+        /* ========================================================
+           🎨 【デザイン調整スイッチ】
+           ======================================================== */
+        :root {
+            /* 🔷 背景（グラデーション） */
+            --bg-start: #e0f2fe;            
+            --bg-end: #bae6fd;      
+
+            /* 🔘 通常ボタン（グラデーション） */
+            --btn-start: #1d4ed8;               
+            --btn-end: #3b82f6;     
+
+            /* 🟢 担当者ボタン（グラデーション） */
+            --btn-green-start: #2f855a;         
+            --btn-green-end: #48bb78;   
+
+            /* 📐 メインボタンのサイズと形状（角R） */
+            --btn-padding: 30px;    
+            --btn-font-size: 26px;  
+            --btn-radius: 10px;     
+
+            /* 🌐 言語切替ボタンの調整スイッチ */
+            --lang-font-size: 16px;   
+            --lang-padding-y: 12px;   
+            --lang-padding-x: 24px;   
+            --lang-radius: 30px;      
+            
+            /* 📍 言語切替ボタンの位置調整 */
+            --lang-position-bottom: 60px; 
+            --lang-position-right: 160px;  
+        }
+
+        /* ========================================================
+           基本スタイル
+           ======================================================== */
+        html, body {
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        h1 {
+            color: #1e3a8a;
+            font-size: 32px;
+            margin-bottom: 40px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .page {
+            display: none;
+            width: 100%;
+            max-width: 650px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .page.active {
+            display: block;
+        }
+
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .main-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--btn-start), var(--btn-end));
+            color: white;
+            font-size: var(--btn-font-size);
+            font-weight: bold;
+            text-decoration: none;
+            padding: var(--btn-padding);
+            border-radius: var(--btn-radius);
+            border: none;
+            box-shadow: 0 6px 15px rgba(29, 78, 216, 0.15);
+            cursor: pointer;
+            transition: transform 0.1s, background 0.1s;
+            -webkit-tap-highlight-color: transparent;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .main-btn:active {
+            filter: brightness(0.85); 
+            transform: scale(0.96);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, var(--btn-green-start), var(--btn-green-end));
+            box-shadow: 0 6px 15px rgba(47, 133, 90, 0.15);
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 30px;
+            background-color: #64748b;
+            color: white;
+            font-size: 18px;
+            padding: 12px 30px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .back-btn:active {
+            background-color: #475569;
+        }
+
+        .lang-container {
+            position: fixed;
+            bottom: var(--lang-position-bottom);
+            right: var(--lang-position-right);
+        }
+        .lang-btn {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #1e3a8a;
+            border: 1px solid #bae6fd;
+            font-size: var(--lang-font-size);
+            font-weight: bold;
+            padding: var(--lang-padding-y) var(--lang-padding-x);
+            border-radius: var(--lang-radius);
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            transition: transform 0.1s, background-color 0.1s;
+        }
+        .lang-btn:active {
+            background-color: #e0f2fe;
+            transform: scale(0.95);
+        }
+
+        /* 📞 呼出中画面のスタイル */
+        .status-msg {
+            font-size: 24px;
+            color: #1e3a8a;
+            font-weight: bold;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        .loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #1d4ed8;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="page-top" class="page active">
+        <h1 id="text-top-title">いらっしゃいませ。ご用件をお選びください</h1>
+        <div class="btn-container">
+            <button class="main-btn" onclick="triggerCall('05017530562')" id="btn-general">総合受付</button>         
+            <button class="main-btn" onclick="triggerCall('05017541479')" id="btn-delivery">配達・集荷</button>
+            <button class="main-btn" onclick="showPage('page-dept')" id="btn-call">担当者呼出</button>
+        </div>
+    </div>
+
+    <div id="page-dept" class="page">
+        <h1 id="text-dept-title">担当の部署をお選びください</h1>
+        <div class="btn-container">
+            <button class="main-btn" onclick="showPage('page-staff-sales')" id="btn-sales">営業部</button>
+            <button class="main-btn" onclick="showPage('page-staff-gyomu')" id="btn-gyomu">業務部</button>
+            <button class="main-btn" onclick="showPage('page-staff-tech')" id="btn-tech">技術製造部</button>
+            <button class="main-btn btn-green" onclick="showPage('page-staff-hirox')" id="btn-hirox">株式会社ハイロックスジャパン東京営業所</button>
+        </div>
+        <button class="back-btn" onclick="showPage('page-top')" id="btn-back-1">◀ 戻る</button>
+    </div>
+
+    <div id="page-staff-sales" class="page">
+        <h1 id="text-sales-title">営業部の担当者をお選びください</h1>
+        <div class="btn-container">
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000001')" data-ja="中島 俊和" data-en="Toshikazu Nakajima">中島 俊和</button>
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000002')" data-ja="小林 大真" data-en="Oma kobayasi">小林 大真</button>
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000002')" data-ja="前川 泰司" data-en=" Taiji Maekawa">前川 泰司</button>
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000002')" data-ja="川越 次郎" data-en="Jiro Kawagoe">川越 次郎</button>
+        </div>
+        <button class="back-btn" onclick="showPage('page-dept')" id="btn-back-2">◀ 戻る</button>
+    </div>
+
+    <div id="page-staff-gyomu" class="page">
+        <h1 id="text-gyomu-title">業務部の担当者をお選びください</h1>
+        <div class="btn-container">
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000005')" data-ja="吉田 絢香" data-en="Ayaka Yoshida">吉田 絢香</button>
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000006')" data-ja="泉 なぎさ" data-en="Nagisa Izumi">泉 なぎさ</button>
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000006')" data-ja="西野 花音" data-en="Kaon Nishino">西野 花音</button>
+        </div>
+        <button class="back-btn" onclick="showPage('page-dept')" id="btn-back-4">◀ 戻る</button>
+    </div>
+
+    <div id="page-staff-tech" class="page">
+        <h1 id="text-tech-title">技術製造部の担当者をお選びください</h1>
+        <div class="btn-container">
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000003')" data-ja="上代 永" data-en="Hisashi Kajiroi">上代 永</button>
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000004')" data-ja="竹内 孝全" data-en="Takamasa Tkeuchi">竹内 孝全</button>
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000004')" data-ja="福家 三郎" data-en="Saburo Fuke">福家 三郎</button>
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000004')" data-ja="岡田 拓矢" data-en="Takuya Okada">岡田 拓矢</button>
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000004')" data-ja="正岡 正雄" data-en="Masao Masaoka">正岡 正雄</button>
+        </div>
+        <button class="back-btn" onclick="showPage('page-dept')" id="btn-back-3">◀ 戻る</button>
+    </div>
+
+    <div id="page-staff-hirox" class="page">
+        <h1 id="text-hirox-title">東京営業所の担当者をお選びください</h1>
+        <div class="btn-container">
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('050XXXX1111')" data-ja="東京 太郎" data-en="Taro Tokyo">東京 太郎</button>
+            <button class="main-btn btn-green staff-btn" onclick="triggerCall('050XXXX2222')" data-ja="東京 花子" data-en="Hanako Tokyo">東京 花子</button>
+        </div>
+        <button class="back-btn" onclick="showPage('page-dept')" id="btn-back-5">◀ 戻る</button>
+    </div>
+
+    <div id="page-calling" class="page" style="text-align: center;">
+        <h1 id="text-calling-title">ただいま呼び出しております</h1>
+        <div id="calling-status-area">
+            <div class="loader"></div>
+            <p class="status-msg" id="text-calling-msg">担当者が応答するまで、<br>そのままで少々お待ちください。</p>
+            <p class="status-msg" style="font-size:16px; font-weight:normal;">
+                iPadで確認画面が出た場合は「発信」を押してください。<br>
+                発信後、自動で「1」を送信する設定です。
+            </p>
+        </div>
+    </div>
+
+    <div class="lang-container" id="lang-bar">
+        <button class="lang-btn" onclick="toggleLanguage()" id="btn-lang">English</button>
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+
+            if(pageId === 'page-calling') {
+                document.getElementById('lang-bar').style.display = 'none';
+            } else {
+                document.getElementById('lang-bar').style.display = 'block';
+            }
+        }
+
+        // ========================================================
+        // 📞 iPad対応 自動発信 + DTMF「1」送信処理
+        // ========================================================
+        function triggerCall(phoneNumber) {
+            // 1. 受付画面側を呼出中表示にする
+            showPage('page-calling');
+            updateCallingText();
+
+            // 2. iPad/iOS向けに番号を整理
+            const cleanNumber = String(phoneNumber).replace(/[^0-9+]/g, '');
+
+            // 3. iPadでは |1 ではなく「,」で待機してからDTMF送信する
+            //    「,,,,1」= 発信後に少し待ってから 1 を送信
+            //    DialpadがiPadの通話アプリとして反応する環境では、この形式が最も通りやすい
+            const callUrl = "tel:" + cleanNumber + ",,,,1";
+
+            // 4. ユーザーのタップ直後に直接起動する
+            window.location.href = callUrl;
+
+            // 5. Safariへ戻った後、10秒後にトップ画面へ戻す
+            setTimeout(() => {
+                showPage('page-top');
+            }, 10000);
+        }
+
+        // 呼出中画面のテキストを言語状態に合わせる
+        function updateCallingText() {
+            document.getElementById('text-calling-title').innerText = isEnglish ? "Calling Staff..." : "ただいま呼び出しております";
+            document.getElementById('text-calling-msg').innerHTML = isEnglish ? "Please wait a moment<br>until the staff member answers." : "担当者が応答するまで、<br>そのままで少々お待ちください。";
+        }
+
+        // ========================================================
+        // 🌐 言語切り替えロジック
+        // ========================================================
+        let isEnglish = false;
+        function toggleLanguage() {
+            isEnglish = !isEnglish;
+            document.getElementById('btn-lang').innerText = isEnglish ? "日本語" : "English";
+            
+            // 1面
+            document.getElementById('text-top-title').innerText = isEnglish ? "Welcome. Please select your business." : "いらっしゃいませ。ご用件をお選びください";
+            document.getElementById('btn-general').innerHTML = isEnglish ? "General Reception" : "総合受付";
+            document.getElementById('btn-delivery').innerHTML = isEnglish ? "Delivery / Pickup" : "配達・集荷";
+            document.getElementById('btn-call').innerHTML = isEnglish ? "Call Staff" : "担当者呼出";
+            
+            // 2面
+            document.getElementById('text-dept-title').innerText = isEnglish ? "Please select a department" : "担当の部署をお選びください";
+            document.getElementById('btn-sales').innerHTML = isEnglish ? "Sales Dept." : "営業部";
+            document.getElementById('btn-tech').innerHTML = isEnglish ? "Technology Dept." : "技術製造部";
+            document.getElementById('btn-gyomu').innerHTML = isEnglish ? "Operations Dept." : "業務部";
+            document.getElementById('btn-hirox').innerHTML = isEnglish ? "Hirox Japan Tokyo Office" : "株式会社ハイロックスジャパン東京営業所";
+            
+            // 3面 タイトル
+            document.getElementById('text-sales-title').innerText = isEnglish ? "Please select a staff member (Sales)" : "営業部の担当者をお選びください";
+            document.getElementById('text-tech-title').innerText = isEnglish ? "Please select a staff member (Tech)" : "技術製造部の担当者をお選びください";
+            document.getElementById('text-gyomu-title').innerText = isEnglish ? "Please select a staff member (Operations)" : "業務部の担当者をお選びください";
+            document.getElementById('text-hirox-title').innerText = isEnglish ? "Please select a staff member (Tokyo Office)" : "東京営業所の担当者をお選びください";
+            
+            // 【自動書き換えシステム】
+            const staffButtons = document.querySelectorAll('.staff-btn');
+            staffButtons.forEach(btn => {
+                const jaName = btn.getAttribute('data-ja');
+                const enName = btn.getAttribute('data-en');
+                btn.innerHTML = isEnglish ? enName : jaName;
+            });
+            
+            // 戻るボタン
+            const backButtons = ['btn-back-1', 'btn-back-2', 'btn-back-3', 'btn-back-4', 'btn-back-5'];
+            backButtons.forEach(id => {
+                document.getElementById(id).innerText = isEnglish ? "◀ Back" : "◀ 戻る";
+            });
+
+            updateCallingText();
+        }
+    </script>
+</body>
+</html>
