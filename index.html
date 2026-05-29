@@ -247,10 +247,10 @@
         <h1 id="text-calling-title">ただいま呼び出しております</h1>
         <div id="calling-status-area">
             <div class="loader"></div>
-            <p class="status-msg" id="text-calling-msg">担当者が応答するまで、<br>そのままで少々お待ちください。</p>
+            <p class="status-msg" id="text-calling-msg">Dialpadアプリを起動しています。<br>そのままで少々お待ちください。</p>
             <p class="status-msg" style="font-size:16px; font-weight:normal;">
-                Dialpadアプリが開いたら、発信内容を確認して「発信」を押してください。<br>
-                ※この画面はDialpadアプリでの発信用です。
+                Dialpadアプリから発信しています。<br>
+                画面が切り替わるまでそのままでお待ちください。
             </p>
         </div>
     </div>
@@ -273,24 +273,29 @@
         }
 
         // ========================================================
-        // 📞 iPad / Dialpadアプリ対応 発信処理
+        // 📞 iPad / Dialpadアプリ優先 発信処理
         // ========================================================
-        // 【重要】
-        // 以前の tel: はiPad標準の電話/FaceTimeへ渡るため、Dialpadから発信されません。
-        // Dialpadアプリで発信させるため、Dialpad公式のカスタムURLスキーム dialpad:// を使います。
+        // 【今回の最善設定】
+        // tel: は使わず、DialpadアプリのURLスキーム dialpad:// を使います。
+        // confirmPhone=1 は付けません。
+        // これにより「番号が表示される → 発信を押す」というDialpad内操作を極力減らし、
+        // ボタン押下後にDialpad側で発信処理へ進む動きに寄せます。
         //
-        // 複数の発信者番号・代表番号をDialpadに登録している場合は、
-        // DIALPAD_FROM_NUMBER にDialpad側で使いたい発信元番号を +81 形式で入れてください。
+        // 注意:
+        // iPadOS / Safariの仕様により、初回や環境によっては
+        // 「Dialpadで開きますか？」のシステム確認が出る場合があります。
+        // これはWebページ側から完全には消せません。
+        //
+        // Dialpad側で発信元番号を明示したい場合のみ、下記に +81 形式で入れてください。
         // 例: const DIALPAD_FROM_NUMBER = "+815012345678";
-        // 不明な場合やDialpad側の既定番号でよい場合は空欄のままでOKです。
+        // 空欄の場合は、Dialpad側の既定の発信元番号が使われます。
         const DIALPAD_FROM_NUMBER = "";
 
-        function toE164ForJapan(phoneNumber) {
-            // 入力値から数字と + だけ残す
+        function normalizeJapanPhoneNumber(phoneNumber) {
             let n = String(phoneNumber).replace(/[^\d+]/g, "");
 
             // 05017530562 → +815017530562
-            // 03... / 080... / 090... なども同じ考え方で +81 に変換
+            // 03 / 06 / 080 / 090 なども +81 形式に変換
             if (n.startsWith("0")) {
                 n = "+81" + n.slice(1);
             }
@@ -298,42 +303,53 @@
             return n;
         }
 
+        function isDialableNumber(phoneNumber) {
+            // 050XXXX1111 のような仮番号は発信させない
+            return /^\+?\d{8,15}$/.test(phoneNumber);
+        }
+
         function buildDialpadUrl(phoneNumber) {
-            const dialNumber = toE164ForJapan(phoneNumber);
+            const dialNumber = normalizeJapanPhoneNumber(phoneNumber);
+
+            if (!isDialableNumber(dialNumber)) {
+                return "";
+            }
 
             const params = new URLSearchParams();
-            // Dialpadアプリ側で確認画面を出す
-            params.set("confirmPhone", "1");
 
-            // 発信元番号を明示したい場合のみ付与
+            // 発信元番号を指定したい場合だけ付与
             if (DIALPAD_FROM_NUMBER && DIALPAD_FROM_NUMBER.trim() !== "") {
                 params.set("fromNumber", DIALPAD_FROM_NUMBER.trim());
             }
 
-            // DialpadのURL形式:
-            // dialpad://+8150xxxxxxxx?confirmPhone=1&fromNumber=+8150yyyyyyyy
-            return "dialpad://" + encodeURIComponent(dialNumber) + "?" + params.toString();
+            // Dialpad公式形式:
+            // dialpad://+8150xxxxxxxx
+            // dialpad://+8150xxxxxxxx?fromNumber=+8150yyyyyyyy
+            const query = params.toString();
+            return "dialpad://" + encodeURIComponent(dialNumber) + (query ? "?" + query : "");
         }
 
         function triggerCall(phoneNumber) {
-            // 1. 受付画面側を呼出中表示にする
+            const callUrl = buildDialpadUrl(phoneNumber);
+
+            if (!callUrl) {
+                alert("このボタンには有効な電話番号が設定されていません。管理者にご確認ください。");
+                return;
+            }
+
+            // 受付画面側を先に呼出中表示にする
             showPage('page-calling');
             updateCallingText();
 
-            // 2. Dialpadアプリを起動してDialpadから発信する
-            const callUrl = buildDialpadUrl(phoneNumber);
+            // Safari復帰はショートカットオートメーション側で行うため、
+            // HTML側では自動でトップへ戻さない。
             window.location.href = callUrl;
-
-            // 3. Safariへ戻った後、10秒後にトップ画面へ戻す
-            setTimeout(() => {
-                showPage('page-top');
-            }, 10000);
         }
 
         // 呼出中画面のテキストを言語状態に合わせる
         function updateCallingText() {
             document.getElementById('text-calling-title').innerText = isEnglish ? "Calling Staff..." : "ただいま呼び出しております";
-            document.getElementById('text-calling-msg').innerHTML = isEnglish ? "Please wait a moment<br>until the staff member answers." : "担当者が応答するまで、<br>そのままで少々お待ちください。";
+            document.getElementById('text-calling-msg').innerHTML = isEnglish ? "Launching Dialpad app.<br>Please wait a moment." : "Dialpadアプリを起動しています。<br>そのままで少々お待ちください。";
         }
 
         // ========================================================
