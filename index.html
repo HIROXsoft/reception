@@ -177,73 +177,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* ========================================================
-           📞 iOS風 発信ポップアップ
-           ======================================================== */
-        .ios-call-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.45);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            padding: 24px;
-            box-sizing: border-box;
-            backdrop-filter: blur(1px);
-            -webkit-backdrop-filter: blur(1px);
-        }
-        .ios-call-overlay.active {
-            display: flex;
-        }
-        .ios-call-sheet {
-            width: 100%;
-            max-width: 430px;
-            background: rgba(36, 52, 64, 0.96);
-            border-radius: 28px;
-            padding: 14px 16px 18px;
-            box-sizing: border-box;
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
-        }
-        .ios-call-action {
-            width: 100%;
-            border: none;
-            border-radius: 28px;
-            min-height: 64px;
-            padding: 12px 16px;
-            font-size: 21px;
-            font-weight: 700;
-            color: #ffffff;
-            background: #18aef5;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            white-space: normal;
-            line-height: 1.25;
-        }
-        .ios-call-action:active {
-            filter: brightness(0.9);
-            transform: scale(0.98);
-        }
-        .ios-call-cancel {
-            width: 100%;
-            border: none;
-            border-radius: 28px;
-            min-height: 64px;
-            margin-top: 12px;
-            padding: 12px 16px;
-            font-size: 21px;
-            font-weight: 700;
-            color: #ffffff;
-            background: rgba(96, 111, 122, 0.88);
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .ios-call-cancel:active {
-            filter: brightness(0.9);
-            transform: scale(0.98);
-        }
-
     </style>
 </head>
 <body>
@@ -314,23 +247,11 @@
         <h1 id="text-calling-title">ただいま呼び出しております</h1>
         <div id="calling-status-area">
             <div class="loader"></div>
-            <p class="status-msg" id="text-calling-msg">Dialpadアプリを起動しています。<br>そのままで少々お待ちください。</p>
+            <p class="status-msg" id="text-calling-msg">担当者が応答するまで、<br>そのままで少々お待ちください。</p>
             <p class="status-msg" style="font-size:16px; font-weight:normal;">
-                Dialpadアプリから発信しています。<br>
-                そのままで少々お待ちください。
+                iOS純正の確認画面が出た場合は「発信」を押してください。<br>
+                発信後、自動で「1」を送信する設定です。
             </p>
-        </div>
-    </div>
-
-
-    <div class="ios-call-overlay" id="ios-call-overlay">
-        <div class="ios-call-sheet">
-            <button class="ios-call-action" onclick="confirmDialpadCall()" id="ios-call-action">
-                発信 050 1753 0562,,,,1
-            </button>
-            <button class="ios-call-cancel" onclick="cancelCall()" id="ios-call-cancel">
-                キャンセル
-            </button>
         </div>
     </div>
 
@@ -352,124 +273,40 @@
         }
 
         // ========================================================
-        // 📞 iOS風ポップアップ表示 → Dialpadアプリ発信
+        // 📞 iOS純正ポップアップ発信
         // ========================================================
-        // 見た目:
-        //   「発信 050 1753 0562,,,,1」のように、iOSの tel: 確認ポップアップ風に表示します。
+        // Dialpadアプリは使いません。
+        // iOS / iPadOS純正の tel: を使い、
+        // 「発信 050...,,,,1」のような純正ポップアップを表示します。
         //
-        // 実際の発信:
-        //   tel: ではなく dialpad:// を使い、Dialpadアプリへ渡します。
-        //
-        // 重要:
-        //   iPadOS / Safari側の仕様により、dialpad:// 起動時に
-        //   「“DialPad”で開きますか？」が別途出る場合があります。
-        //   これはWebページ側だけでは完全には消せません。
-
-        const DIALPAD_FROM_NUMBER = ""; // 例: "+815012345678"。空欄ならDialpad側の既定番号。
-        let pendingDisplayNumber = "";
-        let pendingDialpadUrl = "";
-
-        function normalizeJapanPhoneNumber(phoneNumber) {
-            let n = String(phoneNumber).replace(/[^\d+]/g, "");
-
-            // Dialpadへは +81 形式で渡す
-            if (n.startsWith("0")) {
-                n = "+81" + n.slice(1);
-            }
-
-            return n;
-        }
-
-        function formatPhoneForDisplay(phoneNumber) {
-            const digits = String(phoneNumber).replace(/[^\d]/g, "");
-
-            // 05017530562 → 050 1753 0562
-            if (digits.length === 11) {
-                return digits.slice(0, 3) + " " + digits.slice(3, 7) + " " + digits.slice(7);
-            }
-
-            // 0312345678 → 03 1234 5678 など
-            if (digits.length === 10) {
-                return digits.slice(0, 2) + " " + digits.slice(2, 6) + " " + digits.slice(6);
-            }
-
-            return digits;
-        }
-
-        function isDialableNumber(phoneNumber) {
-            return /^\+?\d{8,15}$/.test(phoneNumber);
-        }
-
-        function buildDialpadUrl(phoneNumber) {
-            const dialNumber = normalizeJapanPhoneNumber(phoneNumber);
-
-            if (!isDialableNumber(dialNumber)) {
-                return "";
-            }
-
-            const params = new URLSearchParams();
-
-            if (DIALPAD_FROM_NUMBER && DIALPAD_FROM_NUMBER.trim() !== "") {
-                params.set("fromNumber", DIALPAD_FROM_NUMBER.trim());
-            }
-
-            const query = params.toString();
-
-            // Dialpadアプリへ渡す。
-            // confirmPhone=1 は付けないことで、Dialpad内の確認操作をできるだけ減らします。
-            return "dialpad://" + encodeURIComponent(dialNumber) + (query ? "?" + query : "");
-        }
-
+        // 注意:
+        // iPad単体に電話機能がない場合、この方式では発信できません。
+        // iPhoneの「ほかのデバイスでの通話」または通話可能な回線設定が必要です。
         function triggerCall(phoneNumber) {
-            pendingDisplayNumber = formatPhoneForDisplay(phoneNumber);
-            pendingDialpadUrl = buildDialpadUrl(phoneNumber);
-
-            if (!pendingDialpadUrl) {
-                alert("このボタンには有効な電話番号が設定されていません。管理者にご確認ください。");
-                return;
-            }
-
-            document.getElementById("ios-call-action").innerText =
-                (isEnglish ? "Call " : "発信 ") + pendingDisplayNumber + ",,,,1";
-            document.getElementById("ios-call-cancel").innerText =
-                isEnglish ? "Cancel" : "キャンセル";
-
-            document.getElementById("ios-call-overlay").classList.add("active");
-        }
-
-        function cancelCall() {
-            pendingDisplayNumber = "";
-            pendingDialpadUrl = "";
-            document.getElementById("ios-call-overlay").classList.remove("active");
-        }
-
-        function confirmDialpadCall() {
-            if (!pendingDialpadUrl) {
-                cancelCall();
-                return;
-            }
-
-            document.getElementById("ios-call-overlay").classList.remove("active");
-
+            // 1. 受付画面側を呼出中表示にする
             showPage('page-calling');
-            // iOS風発信ポップアップが開いている場合の言語更新
-            if (document.getElementById("ios-call-overlay").classList.contains("active")) {
-                document.getElementById("ios-call-action").innerText =
-                    (isEnglish ? "Call " : "発信 ") + pendingDisplayNumber + ",,,,1";
-                document.getElementById("ios-call-cancel").innerText =
-                    isEnglish ? "Cancel" : "キャンセル";
-            }
-
             updateCallingText();
 
-            // Safari復帰はショートカットアプリのオートメーション側で処理する前提。
-            window.location.href = pendingDialpadUrl;
+            // 2. iOS向けに番号を整理
+            const cleanNumber = String(phoneNumber).replace(/[^0-9+]/g, '');
+
+            // 3. iOS純正の発信ポップアップを表示
+            //    「,,,,1」= 発信後に少し待ってからDTMFの1を送る指定
+            const callUrl = "tel:" + cleanNumber + ",,,,1";
+
+            // 4. ユーザー操作直後に起動することで、iOS純正ポップアップを出す
+            window.location.href = callUrl;
+
+            // 5. Safariへ戻った後、10秒後にトップ画面へ戻す
+            setTimeout(() => {
+                showPage('page-top');
+            }, 10000);
         }
 
         // 呼出中画面のテキストを言語状態に合わせる
         function updateCallingText() {
             document.getElementById('text-calling-title').innerText = isEnglish ? "Calling Staff..." : "ただいま呼び出しております";
-            document.getElementById('text-calling-msg').innerHTML = isEnglish ? "Launching Dialpad app.<br>Please wait a moment." : "Dialpadアプリを起動しています。<br>そのままで少々お待ちください。";
+            document.getElementById('text-calling-msg').innerHTML = isEnglish ? "Please wait a moment<br>until the staff member answers." : "担当者が応答するまで、<br>そのままで少々お待ちください。";
         }
 
         // ========================================================
