@@ -179,77 +179,69 @@
         }
 
         /* ========================================================
-           📞 受付アプリ内 発信確認ポップアップ
+           📞 iOS風 発信ポップアップ
            ======================================================== */
-        .call-modal-overlay {
+        .ios-call-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.35);
+            background: rgba(15, 23, 42, 0.45);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 9999;
             padding: 24px;
             box-sizing: border-box;
+            backdrop-filter: blur(1px);
+            -webkit-backdrop-filter: blur(1px);
         }
-        .call-modal-overlay.active {
+        .ios-call-overlay.active {
             display: flex;
         }
-        .call-modal {
+        .ios-call-sheet {
             width: 100%;
-            max-width: 520px;
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 22px;
-            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
-            padding: 34px 30px 28px;
-            text-align: center;
+            max-width: 430px;
+            background: rgba(36, 52, 64, 0.96);
+            border-radius: 28px;
+            padding: 14px 16px 18px;
             box-sizing: border-box;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
         }
-        .call-modal-title {
-            color: #1e3a8a;
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 16px;
-        }
-        .call-modal-number {
-            color: #0f172a;
-            font-size: 30px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            word-break: break-all;
-        }
-        .call-modal-sub {
-            color: #475569;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 26px;
-        }
-        .call-modal-actions {
-            display: flex;
-            gap: 14px;
-        }
-        .call-modal-btn {
-            flex: 1;
+        .ios-call-action {
+            width: 100%;
             border: none;
-            border-radius: 14px;
-            padding: 18px 12px;
-            font-size: 22px;
-            font-weight: bold;
+            border-radius: 28px;
+            min-height: 64px;
+            padding: 12px 16px;
+            font-size: 21px;
+            font-weight: 700;
+            color: #ffffff;
+            background: #18aef5;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            white-space: normal;
+            line-height: 1.25;
+        }
+        .ios-call-action:active {
+            filter: brightness(0.9);
+            transform: scale(0.98);
+        }
+        .ios-call-cancel {
+            width: 100%;
+            border: none;
+            border-radius: 28px;
+            min-height: 64px;
+            margin-top: 12px;
+            padding: 12px 16px;
+            font-size: 21px;
+            font-weight: 700;
+            color: #ffffff;
+            background: rgba(96, 111, 122, 0.88);
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
-        .call-modal-btn:active {
-            transform: scale(0.96);
-            filter: brightness(0.92);
-        }
-        .call-modal-cancel {
-            background: #e2e8f0;
-            color: #334155;
-        }
-        .call-modal-call {
-            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
-            color: #ffffff;
+        .ios-call-cancel:active {
+            filter: brightness(0.9);
+            transform: scale(0.98);
         }
 
     </style>
@@ -331,18 +323,14 @@
     </div>
 
 
-    <div class="call-modal-overlay" id="call-modal-overlay">
-        <div class="call-modal">
-            <div class="call-modal-title" id="call-modal-title">発信しますか？</div>
-            <div class="call-modal-number" id="call-modal-number">05000000000</div>
-            <div class="call-modal-sub" id="call-modal-sub">
-                Dialpadアプリから発信します。<br>
-                よろしければ「発信」を押してください。
-            </div>
-            <div class="call-modal-actions">
-                <button class="call-modal-btn call-modal-cancel" onclick="cancelCall()" id="call-modal-cancel">キャンセル</button>
-                <button class="call-modal-btn call-modal-call" onclick="confirmDialpadCall()" id="call-modal-call">発信</button>
-            </div>
+    <div class="ios-call-overlay" id="ios-call-overlay">
+        <div class="ios-call-sheet">
+            <button class="ios-call-action" onclick="confirmDialpadCall()" id="ios-call-action">
+                発信 050 1753 0562,,,,1
+            </button>
+            <button class="ios-call-cancel" onclick="cancelCall()" id="ios-call-cancel">
+                キャンセル
+            </button>
         </div>
     </div>
 
@@ -364,31 +352,27 @@
         }
 
         // ========================================================
-        // 📞 受付アプリ内ポップアップ → Dialpadアプリ発信
+        // 📞 iOS風ポップアップ表示 → Dialpadアプリ発信
         // ========================================================
-        // 方針:
-        // 1. tel: は使わない
-        //    → tel: はiPad標準の電話/FaceTimeへ渡りやすく、Dialpad運用と相性が悪いため。
+        // 見た目:
+        //   「発信 050 1753 0562,,,,1」のように、iOSの tel: 確認ポップアップ風に表示します。
         //
-        // 2. 受付アプリ内で「発信 050...」風の独自ポップアップを表示
-        //    → 操作感を受付アプリ内に寄せるため。
+        // 実際の発信:
+        //   tel: ではなく dialpad:// を使い、Dialpadアプリへ渡します。
         //
-        // 3. 発信ボタン押下後は dialpad:// でDialpadアプリへ渡す
-        //    → Dialpadから発信するため。
-        //
-        // 注意:
-        // Safari/iPadOSが表示する「“DialPad”で開きますか？」はOS側の確認です。
-        // Webページ側のHTML/JavaScriptでは完全には非表示にできません。
-        // ただしDialpadアプリ内の番号確認画面を減らすため confirmPhone=1 は付けていません。
+        // 重要:
+        //   iPadOS / Safari側の仕様により、dialpad:// 起動時に
+        //   「“DialPad”で開きますか？」が別途出る場合があります。
+        //   これはWebページ側だけでは完全には消せません。
 
-        const DIALPAD_FROM_NUMBER = ""; // 例: "+815012345678"。空欄ならDialpad側の既定番号を使用。
-        let pendingCallNumber = "";
+        const DIALPAD_FROM_NUMBER = ""; // 例: "+815012345678"。空欄ならDialpad側の既定番号。
+        let pendingDisplayNumber = "";
         let pendingDialpadUrl = "";
 
         function normalizeJapanPhoneNumber(phoneNumber) {
             let n = String(phoneNumber).replace(/[^\d+]/g, "");
 
-            // Dialpadには +81 形式で渡す
+            // Dialpadへは +81 形式で渡す
             if (n.startsWith("0")) {
                 n = "+81" + n.slice(1);
             }
@@ -396,9 +380,20 @@
             return n;
         }
 
-        function displayPhoneNumber(phoneNumber) {
-            // 画面表示は利用者に馴染みのある国内形式のままにする
-            return String(phoneNumber).replace(/[^\d]/g, "");
+        function formatPhoneForDisplay(phoneNumber) {
+            const digits = String(phoneNumber).replace(/[^\d]/g, "");
+
+            // 05017530562 → 050 1753 0562
+            if (digits.length === 11) {
+                return digits.slice(0, 3) + " " + digits.slice(3, 7) + " " + digits.slice(7);
+            }
+
+            // 0312345678 → 03 1234 5678 など
+            if (digits.length === 10) {
+                return digits.slice(0, 2) + " " + digits.slice(2, 6) + " " + digits.slice(6);
+            }
+
+            return digits;
         }
 
         function isDialableNumber(phoneNumber) {
@@ -419,11 +414,14 @@
             }
 
             const query = params.toString();
+
+            // Dialpadアプリへ渡す。
+            // confirmPhone=1 は付けないことで、Dialpad内の確認操作をできるだけ減らします。
             return "dialpad://" + encodeURIComponent(dialNumber) + (query ? "?" + query : "");
         }
 
         function triggerCall(phoneNumber) {
-            pendingCallNumber = displayPhoneNumber(phoneNumber);
+            pendingDisplayNumber = formatPhoneForDisplay(phoneNumber);
             pendingDialpadUrl = buildDialpadUrl(phoneNumber);
 
             if (!pendingDialpadUrl) {
@@ -431,21 +429,18 @@
                 return;
             }
 
-            document.getElementById("call-modal-number").innerText = pendingCallNumber;
-            document.getElementById("call-modal-title").innerText = isEnglish ? "Make a call?" : "発信しますか？";
-            document.getElementById("call-modal-sub").innerHTML = isEnglish
-                ? "This call will be placed using the Dialpad app.<br>Please tap Call to continue."
-                : "Dialpadアプリから発信します。<br>よろしければ「発信」を押してください。";
-            document.getElementById("call-modal-cancel").innerText = isEnglish ? "Cancel" : "キャンセル";
-            document.getElementById("call-modal-call").innerText = isEnglish ? "Call" : "発信";
+            document.getElementById("ios-call-action").innerText =
+                (isEnglish ? "Call " : "発信 ") + pendingDisplayNumber + ",,,,1";
+            document.getElementById("ios-call-cancel").innerText =
+                isEnglish ? "Cancel" : "キャンセル";
 
-            document.getElementById("call-modal-overlay").classList.add("active");
+            document.getElementById("ios-call-overlay").classList.add("active");
         }
 
         function cancelCall() {
-            pendingCallNumber = "";
+            pendingDisplayNumber = "";
             pendingDialpadUrl = "";
-            document.getElementById("call-modal-overlay").classList.remove("active");
+            document.getElementById("ios-call-overlay").classList.remove("active");
         }
 
         function confirmDialpadCall() {
@@ -454,23 +449,19 @@
                 return;
             }
 
-            document.getElementById("call-modal-overlay").classList.remove("active");
+            document.getElementById("ios-call-overlay").classList.remove("active");
 
-            // 受付画面側を呼出中表示にする
             showPage('page-calling');
-            // 発信確認ポップアップが開いている場合の言語更新
-            if (document.getElementById("call-modal-overlay").classList.contains("active")) {
-                document.getElementById("call-modal-title").innerText = isEnglish ? "Make a call?" : "発信しますか？";
-                document.getElementById("call-modal-sub").innerHTML = isEnglish
-                    ? "This call will be placed using the Dialpad app.<br>Please tap Call to continue."
-                    : "Dialpadアプリから発信します。<br>よろしければ「発信」を押してください。";
-                document.getElementById("call-modal-cancel").innerText = isEnglish ? "Cancel" : "キャンセル";
-                document.getElementById("call-modal-call").innerText = isEnglish ? "Call" : "発信";
+            // iOS風発信ポップアップが開いている場合の言語更新
+            if (document.getElementById("ios-call-overlay").classList.contains("active")) {
+                document.getElementById("ios-call-action").innerText =
+                    (isEnglish ? "Call " : "発信 ") + pendingDisplayNumber + ",,,,1";
+                document.getElementById("ios-call-cancel").innerText =
+                    isEnglish ? "Cancel" : "キャンセル";
             }
 
             updateCallingText();
 
-            // Dialpadアプリへ渡す。
             // Safari復帰はショートカットアプリのオートメーション側で処理する前提。
             window.location.href = pendingDialpadUrl;
         }
