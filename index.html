@@ -177,56 +177,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .cancel-call-btn {
-            margin-top: 28px;
-            background: linear-gradient(135deg, #dc2626, #ef4444);
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            padding: 22px 36px;
-            border-radius: 16px;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 6px 15px rgba(220, 38, 38, 0.22);
-            -webkit-tap-highlight-color: transparent;
-            width: 100%;
-            max-width: 420px;
-            box-sizing: border-box;
-        }
-        .cancel-call-btn:active {
-            filter: brightness(0.88);
-            transform: scale(0.96);
-        }
-
-        .return-top-btn {
-            margin-top: 14px;
-            background: linear-gradient(135deg, #475569, #64748b);
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            padding: 18px 30px;
-            border-radius: 16px;
-            border: none;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            width: 100%;
-            max-width: 420px;
-            box-sizing: border-box;
-        }
-        .return-top-btn:active {
-            filter: brightness(0.88);
-            transform: scale(0.96);
-        }
-
-        .calling-note {
-            margin-top: 14px;
-            color: #1e3a8a;
-            font-size: 15px;
-            line-height: 1.6;
-            font-weight: normal;
-        }
-
     </style>
 </head>
 <body>
@@ -297,21 +247,10 @@
         <h1 id="text-calling-title">ただいま呼び出しております</h1>
         <div id="calling-status-area">
             <div class="loader"></div>
-            <p class="status-msg" id="text-calling-msg">担当者が応答するまで、<br>そのままで少々お待ちください。</p>
+            <p class="status-msg" id="text-calling-msg">ショートカットを起動しています。<br>そのままで少々お待ちください。</p>
             <p class="status-msg" style="font-size:16px; font-weight:normal;">
-                iOS純正の確認画面が出た場合は「発信」を押してください。<br>
-                発信後、自動で「1」を送信する設定です。
-            </p>
-
-            <button class="cancel-call-btn" onclick="requestCancelCall()" id="btn-cancel-call">
-                通話をキャンセルする
-            </button>
-            <button class="return-top-btn" onclick="showPage('page-top')" id="btn-return-top">
-                受付画面へ戻る
-            </button>
-            <p class="calling-note" id="text-calling-note">
-                ※「通話をキャンセルする」を押すと、ショートカット経由でキャンセルモードを起動します。<br>
-                キャンセルモード時はDialpadを開いてもブラウザへ自動復帰しない設定にしてください。
+                ショートカット経由でDialpad発信を開始します。<br>
+                通話後はショートカット側の設定時間後に受付画面へ戻ります。
             </p>
         </div>
     </div>
@@ -334,64 +273,56 @@
         }
 
         // ========================================================
-        // 📞 iOS純正ポップアップ発信 + キャンセル用ショートカット起動
+        // 📞 ショートカット経由 Dialpad発信
         // ========================================================
-        // 発信:
-        //   tel:050xxxx,,,,1 を使い、iOS純正の発信ポップアップを表示します。
-        //   iPadの既定通話アプリをDialpadにしている場合、発信処理はDialpad側へ渡ります。
+        // このHTMLから直接 tel: や dialpad:// は起動しません。
+        // Webアプリのボタン押下 → ショートカット「受付Dialpad発信」を起動
+        // → ショートカット側で Dialpad発信 → 待機 → 受付Webアプリへ戻る、という流れです。
         //
-        // キャンセル:
-        //   ブラウザHTMLだけではDialpad通話を直接終了できません。
-        //   そのため、このボタンではショートカット「Dialpad通話キャンセル」を起動します。
+        // ショートカット名:
+        //   受付Dialpad発信
         //
-        // ショートカット側の推奨内容:
-        //   1. iCloud Drive / Shortcuts に cancel_dialpad.txt を作成
-        //   2. dialpad:// を開く
+        // ショートカットには、入力として電話番号が渡されます。
+        // ショートカット側では「ショートカットの入力」を使って
+        // tel:電話番号,,,,1 または dialpad://電話番号 を開いてください。
         //
-        // 既存オートメーション「Dialpadを開いた時」側:
-        //   cancel_dialpad.txt が存在する場合:
-        //      ファイルを削除 → 何もしない
-        //   存在しない場合:
-        //      受付HTMLのURLを開く
+        // 例:
+        //   受け取った入力: 05017530562
+        //   ショートカット側で開くURL: tel:05017530562,,,,1
         //
-        // これにより、通常発信時はブラウザへ自動復帰し、
-        // キャンセルボタン経由でDialpadを開いた時だけ自動復帰を止められます。
-
-        const CANCEL_SHORTCUT_NAME = "Dialpad通話キャンセル";
-        let lastDialedNumber = "";
+        // 復帰タイミングはショートカット側の「待機 秒数」で調整します。
+        const CALL_SHORTCUT_NAME = "受付Dialpad発信";
 
         function cleanPhoneNumber(phoneNumber) {
             return String(phoneNumber).replace(/[^0-9+]/g, '');
         }
 
         function triggerCall(phoneNumber) {
+            // 1. 受付画面側を呼出中表示にする
             showPage('page-calling');
-            // 発信中画面
-            document.getElementById('btn-cancel-call').innerText = isEnglish ? "Cancel Call" : "通話をキャンセルする";
-            document.getElementById('btn-return-top').innerText = isEnglish ? "Back to Reception" : "受付画面へ戻る";
-            document.getElementById('text-calling-note').innerHTML = isEnglish
-                ? "Tap Cancel Call to run the cancellation shortcut.<br>Configure the Dialpad-open automation not to return to the browser while cancel mode is active."
-                : "※「通話をキャンセルする」を押すと、ショートカット経由でキャンセルモードを起動します。<br>キャンセルモード時はDialpadを開いてもブラウザへ自動復帰しない設定にしてください。";
-
             updateCallingText();
 
-            lastDialedNumber = cleanPhoneNumber(phoneNumber);
+            // 2. ショートカットに渡す番号を整理
+            const cleanNumber = cleanPhoneNumber(phoneNumber);
 
-            const callUrl = "tel:" + lastDialedNumber + ",,,,1";
-            window.location.href = callUrl;
-        }
+            // 3. ショートカットを起動し、電話番号を入力として渡す
+            // shortcuts://run-shortcut?name=受付Dialpad発信&input=text&text=05017530562
+            const shortcutUrl =
+                "shortcuts://run-shortcut?name=" +
+                encodeURIComponent(CALL_SHORTCUT_NAME) +
+                "&input=text&text=" +
+                encodeURIComponent(cleanNumber);
 
-        function requestCancelCall() {
-            // ショートカットアプリの指定ショートカットを起動する。
-            // URLエンコード済みで呼び出すため、日本語名でも動作します。
-            const shortcutUrl = "shortcuts://run-shortcut?name=" + encodeURIComponent(CANCEL_SHORTCUT_NAME);
             window.location.href = shortcutUrl;
+
+            // 4. Webアプリへの復帰はショートカット側で行うため、
+            // HTML側では自動でトップ画面へ戻しません。
         }
 
         // 呼出中画面のテキストを言語状態に合わせる
         function updateCallingText() {
             document.getElementById('text-calling-title').innerText = isEnglish ? "Calling Staff..." : "ただいま呼び出しております";
-            document.getElementById('text-calling-msg').innerHTML = isEnglish ? "Please wait a moment<br>until the staff member answers." : "担当者が応答するまで、<br>そのままで少々お待ちください。";
+            document.getElementById('text-calling-msg').innerHTML = isEnglish ? "Launching the shortcut.<br>Please wait a moment." : "ショートカットを起動しています。<br>そのままで少々お待ちください。";
         }
 
         // ========================================================
