@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="総合受付">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>総合受付システム</title>
     <style>
         /* ========================================================
@@ -97,6 +100,7 @@
             cursor: pointer;
             box-shadow: 0 6px 15px rgba(29, 78, 216, 0.15);
             -webkit-tap-highlight-color: transparent;
+            text-decoration: none;
         }
 
         .main-btn:active {
@@ -367,9 +371,15 @@
                         renderMenu();
                     });
                 } else if (item.shortcut) {
-                    button.addEventListener("click", function() {
+                    const link = document.createElement("a");
+                    link.className = button.className;
+                    link.textContent = button.textContent;
+                    link.href = shortcutUrl(item.shortcut);
+                    link.addEventListener("click", function() {
                         runShortcut(item.shortcut);
                     });
+                    container.appendChild(link);
+                    return;
                 }
 
                 container.appendChild(button);
@@ -392,23 +402,8 @@
             return "shortcuts://run-shortcut?name=" + encodeURIComponent(shortcutName);
         }
 
-        function openShortcut(shortcutName) {
-            window.location.href = shortcutUrl(shortcutName);
-        }
 
         function runShortcut(shortcutName) {
-            /*
-               iPad / iPhone のSafariでは、カスタムURLの起動は
-               「ボタンを押した直後の処理」で行う必要があります。
-
-               shortcuts://run-shortcut よりも
-               shortcuts://run-shortcut の方が安定する場合があるため、
-               こちらを使います。
-            */
-            // 先にショートカットを起動します。
-            openShortcut(shortcutName);
-
-            // 受付画面側は呼出中画面に切り替えます。
             showCallingPage();
         }
 
