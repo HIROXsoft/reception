@@ -6,40 +6,27 @@
     <title>総合受付システム</title>
     <style>
         /* ========================================================
-           🎨 【デザイン調整スイッチ】
+           デザイン調整
+           数字や色だけ変更すれば、画面全体の見た目を調整できます。
            ======================================================== */
         :root {
-            /* 🔷 背景（グラデーション） */
-            --bg-start: #e0f2fe;            
-            --bg-end: #bae6fd;      
-
-            /* 🔘 通常ボタン（グラデーション） */
-            --btn-start: #1d4ed8;               
-            --btn-end: #3b82f6;     
-
-            /* 🟢 担当者ボタン（グラデーション） */
-            --btn-green-start: #2f855a;         
-            --btn-green-end: #48bb78;   
-
-            /* 📐 メインボタンのサイズと形状（角R） */
-            --btn-padding: 30px;    
-            --btn-font-size: 26px;  
-            --btn-radius: 10px;     
-
-            /* 🌐 言語切替ボタンの調整スイッチ */
-            --lang-font-size: 16px;   
-            --lang-padding-y: 12px;   
-            --lang-padding-x: 24px;   
-            --lang-radius: 30px;      
-            
-            /* 📍 言語切替ボタンの位置調整 */
-            --lang-position-bottom: 60px; 
-            --lang-position-right: 160px;  
+            --bg-start: #e0f2fe;
+            --bg-end: #bae6fd;
+            --btn-start: #1d4ed8;
+            --btn-end: #3b82f6;
+            --btn-green-start: #2f855a;
+            --btn-green-end: #48bb78;
+            --btn-padding: 30px;
+            --btn-font-size: 26px;
+            --btn-radius: 10px;
+            --lang-font-size: 16px;
+            --lang-padding-y: 12px;
+            --lang-padding-x: 24px;
+            --lang-radius: 30px;
+            --lang-position-bottom: 60px;
+            --lang-position-right: 160px;
         }
 
-        /* ========================================================
-           基本スタイル
-           ======================================================== */
         html, body {
             touch-action: manipulation;
             -webkit-text-size-adjust: 100%;
@@ -63,19 +50,16 @@
         h1 {
             color: #1e3a8a;
             font-size: 32px;
-            margin-bottom: 40px;
+            margin: 0 0 40px;
             font-weight: bold;
             text-align: center;
+            line-height: 1.4;
         }
 
         .page {
-            display: none;
             width: 100%;
             max-width: 650px;
             animation: fadeIn 0.3s ease-in-out;
-        }
-        .page.active {
-            display: block;
         }
 
         .btn-container {
@@ -88,23 +72,24 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+            border: none;
+            border-radius: var(--btn-radius);
+            padding: var(--btn-padding);
             background: linear-gradient(135deg, var(--btn-start), var(--btn-end));
             color: white;
             font-size: var(--btn-font-size);
             font-weight: bold;
-            text-decoration: none;
-            padding: var(--btn-padding);
-            border-radius: var(--btn-radius);
-            border: none;
-            box-shadow: 0 6px 15px rgba(29, 78, 216, 0.15);
+            text-align: center;
             cursor: pointer;
-            transition: transform 0.1s, background 0.1s;
+            box-shadow: 0 6px 15px rgba(29, 78, 216, 0.15);
+            transition: transform 0.1s, filter 0.1s;
             -webkit-tap-highlight-color: transparent;
-            width: 100%;
-            box-sizing: border-box;
         }
+
         .main-btn:active {
-            filter: brightness(0.85); 
+            filter: brightness(0.85);
             transform: scale(0.96);
         }
 
@@ -123,8 +108,8 @@
             border-radius: 30px;
             border: none;
             cursor: pointer;
-            text-decoration: none;
         }
+
         .back-btn:active {
             background-color: #475569;
         }
@@ -134,6 +119,7 @@
             bottom: var(--lang-position-bottom);
             right: var(--lang-position-right);
         }
+
         .lang-btn {
             background-color: rgba(255, 255, 255, 0.9);
             color: #1e3a8a;
@@ -143,15 +129,20 @@
             padding: var(--lang-padding-y) var(--lang-padding-x);
             border-radius: var(--lang-radius);
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
             transition: transform 0.1s, background-color 0.1s;
         }
+
         .lang-btn:active {
             background-color: #e0f2fe;
             transform: scale(0.95);
         }
 
-        /* 📞 呼出中画面のスタイル */
+        .calling-page {
+            display: none;
+            text-align: center;
+        }
+
         .status-msg {
             font-size: 24px;
             color: #1e3a8a;
@@ -159,6 +150,14 @@
             margin-top: 20px;
             line-height: 1.6;
         }
+
+        .sub-msg {
+            font-size: 16px;
+            color: #1e3a8a;
+            font-weight: normal;
+            line-height: 1.7;
+        }
+
         .loader {
             border: 6px solid #f3f3f3;
             border-top: 6px solid #1d4ed8;
@@ -173,6 +172,7 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -180,194 +180,245 @@
     </style>
 </head>
 <body>
+    <main id="menu-page" class="page"></main>
 
-    <div id="page-top" class="page active">
-        <h1 id="text-top-title">いらっしゃいませ。ご用件をお選びください</h1>
-        <div class="btn-container">
-            <button class="main-btn" onclick="triggerCall('05017530562')" id="btn-general">総合受付</button>         
-            <button class="main-btn" onclick="triggerCall('05017530562')" id="btn-delivery">配達・集荷</button>
-            <button class="main-btn" onclick="showPage('page-dept')" id="btn-call">担当者呼出</button>
-        </div>
-    </div>
-
-    <div id="page-dept" class="page">
-        <h1 id="text-dept-title">担当の部署をお選びください</h1>
-        <div class="btn-container">
-            <button class="main-btn" onclick="showPage('page-staff-sales')" id="btn-sales">営業部</button>
-            <button class="main-btn" onclick="showPage('page-staff-gyomu')" id="btn-gyomu">業務部</button>
-            <button class="main-btn" onclick="showPage('page-staff-tech')" id="btn-tech">技術製造部</button>
-            <button class="main-btn btn-green" onclick="showPage('page-staff-hirox')" id="btn-hirox">株式会社ハイロックスジャパン東京営業所</button>
-        </div>
-        <button class="back-btn" onclick="showPage('page-top')" id="btn-back-1">◀ 戻る</button>
-    </div>
-
-    <div id="page-staff-sales" class="page">
-        <h1 id="text-sales-title">営業部の担当者をお選びください</h1>
-        <div class="btn-container">
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000001')" data-ja="中島 俊和" data-en="Toshikazu Nakajima">中島 俊和</button>
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000002')" data-ja="小林 大真" data-en="Oma kobayasi">小林 大真</button>
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000002')" data-ja="前川 泰司" data-en=" Taiji Maekawa">前川 泰司</button>
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000002')" data-ja="川越 次郎" data-en="Jiro Kawagoe">川越 次郎</button>
-        </div>
-        <button class="back-btn" onclick="showPage('page-dept')" id="btn-back-2">◀ 戻る</button>
-    </div>
-
-    <div id="page-staff-gyomu" class="page">
-        <h1 id="text-gyomu-title">業務部の担当者をお選びください</h1>
-        <div class="btn-container">
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000005')" data-ja="吉田 絢香" data-en="Ayaka Yoshida">吉田 絢香</button>
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000006')" data-ja="泉 なぎさ" data-en="Nagisa Izumi">泉 なぎさ</button>
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000006')" data-ja="西野 花音" data-en="Kaon Nishino">西野 花音</button>
-        </div>
-        <button class="back-btn" onclick="showPage('page-dept')" id="btn-back-4">◀ 戻る</button>
-    </div>
-
-    <div id="page-staff-tech" class="page">
-        <h1 id="text-tech-title">技術製造部の担当者をお選びください</h1>
-        <div class="btn-container">
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000003')" data-ja="上代 永" data-en="Hisashi Kajiroi">上代 永</button>
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000004')" data-ja="竹内 孝全" data-en="Takamasa Tkeuchi">竹内 孝全</button>
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000004')" data-ja="福家 三郎" data-en="Saburo Fuke">福家 三郎</button>
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000004')" data-ja="岡田 拓矢" data-en="Takuya Okada">岡田 拓矢</button>
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('05000000004')" data-ja="正岡 正雄" data-en="Masao Masaoka">正岡 正雄</button>
-        </div>
-        <button class="back-btn" onclick="showPage('page-dept')" id="btn-back-3">◀ 戻る</button>
-    </div>
-
-    <div id="page-staff-hirox" class="page">
-        <h1 id="text-hirox-title">東京営業所の担当者をお選びください</h1>
-        <div class="btn-container">
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('050XXXX1111')" data-ja="東京 太郎" data-en="Taro Tokyo">東京 太郎</button>
-            <button class="main-btn btn-green staff-btn" onclick="triggerCall('050XXXX2222')" data-ja="東京 花子" data-en="Hanako Tokyo">東京 花子</button>
-        </div>
-        <button class="back-btn" onclick="showPage('page-dept')" id="btn-back-5">◀ 戻る</button>
-    </div>
-
-    <div id="page-calling" class="page" style="text-align: center;">
-        <h1 id="text-calling-title">ただいま呼び出しております</h1>
-        <div id="calling-status-area">
-            <div class="loader"></div>
-            <p class="status-msg" id="text-calling-msg">ショートカットを起動しています。<br>そのままで少々お待ちください。</p>
-            <p class="status-msg" style="font-size:16px; font-weight:normal;">
-                ショートカット経由でDialpad発信を開始します。<br>
-                通話後はショートカット側の設定時間後に受付画面へ戻ります。
-            </p>
-        </div>
-    </div>
+    <main id="calling-page" class="page calling-page">
+        <h1 id="calling-title">ただいま呼び出しております</h1>
+        <div class="loader"></div>
+        <p class="status-msg" id="calling-main-msg">起動しています。<br>そのままで少々お待ちください。</p>
+        <p class="sub-msg" id="calling-sub-msg">通話中…</p>
+        <button class="back-btn" id="return-btn" type="button">受付画面へ戻る</button>
+    </main>
 
     <div class="lang-container" id="lang-bar">
-        <button class="lang-btn" onclick="toggleLanguage()" id="btn-lang">English</button>
+        <button class="lang-btn" id="lang-btn" type="button">English</button>
     </div>
 
     <script>
-        function showPage(pageId) {
-            const pages = document.querySelectorAll('.page');
-            pages.forEach(page => page.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
+        /* ========================================================
+           発信先・ボタン編集エリア
+           ========================================================
 
-            if(pageId === 'page-calling') {
-                document.getElementById('lang-bar').style.display = 'none';
-            } else {
-                document.getElementById('lang-bar').style.display = 'block';
+           【編集方法】
+           1. ボタンを追加する場合
+              下の MENU に、同じ形の行をコピーして追加してください。
+
+           2. ボタンを削除する場合
+              不要な { ... } のかたまりを削除してください。
+
+           3. 発信先を変更する場合
+              shortcut: "受付" の "受付" 部分を、ショートカット名に合わせて変更してください。
+
+           4. 階層を作る場合
+              children: [ ... ] の中にボタンを入れると、次の画面が作られます。
+
+           5. 緑色ボタンにしたい場合
+              green: true を付けてください。
+
+           ※ shortcut 名は、iPadの「ショートカット」アプリ内の名前と完全一致させてください。
+           ※ 電話番号やDialpadの処理はHTML内には置かず、各ショートカット側で設定してください。
+        */
+        const MENU = [
+            { ja: "総合受付", en: "General Reception", shortcut: "受付" },
+            { ja: "配達・集荷", en: "Delivery / Pickup", shortcut: "配集" },
+            {
+                ja: "担当者呼出",
+                en: "Call Staff",
+                titleJa: "担当の部署をお選びください",
+                titleEn: "Please select a department",
+                children: [
+                    {
+                        ja: "営業部",
+                        en: "Sales Dept.",
+                        titleJa: "営業部の担当者をお選びください",
+                        titleEn: "Please select a staff member (Sales)",
+                        children: [
+                            { ja: "中島 俊和", en: "Toshikazu Nakajima", shortcut: "中島", green: true },
+                            { ja: "小林 大真", en: "Oma Kobayashi", shortcut: "小林", green: true },
+                            { ja: "前川 泰司", en: "Taiji Maekawa", shortcut: "前川", green: true },
+                            { ja: "川越 次郎", en: "Jiro Kawagoe", shortcut: "川越", green: true }
+                        ]
+                    },
+                    {
+                        ja: "業務部",
+                        en: "Operations Dept.",
+                        titleJa: "業務部の担当者をお選びください",
+                        titleEn: "Please select a staff member (Operations)",
+                        children: [
+                            { ja: "吉田 絢香", en: "Ayaka Yoshida", shortcut: "吉田", green: true },
+                            { ja: "泉 なぎさ", en: "Nagisa Izumi", shortcut: "泉", green: true },
+                            { ja: "西野 花音", en: "Kanon Nishino", shortcut: "西野", green: true }
+                        ]
+                    },
+                    {
+                        ja: "技術製造部",
+                        en: "Technology Dept.",
+                        titleJa: "技術製造部の担当者をお選びください",
+                        titleEn: "Please select a staff member (Technology)",
+                        children: [
+                            { ja: "上代 永", en: "Hisashi Kajiroi", shortcut: "上代", green: true },
+                            { ja: "竹内 孝全", en: "Takamasa Takeuchi", shortcut: "竹内", green: true },
+                            { ja: "福家 三郎", en: "Saburo Fuke", shortcut: "福家", green: true },
+                            { ja: "岡田 拓矢", en: "Takuya Okada", shortcut: "岡田", green: true },
+                            { ja: "正岡 正雄", en: "Masao Masaoka", shortcut: "正岡", green: true }
+                        ]
+                    },
+                    {
+                        ja: "株式会社ハイロックスジャパン東京営業所",
+                        en: "Hirox Japan Tokyo Office",
+                        titleJa: "東京営業所の担当者をお選びください",
+                        titleEn: "Please select a staff member (Tokyo Office)",
+                        green: true,
+                        children: [
+                            { ja: "東京 太郎", en: "Taro Tokyo", shortcut: "東太郎", green: true },
+                            { ja: "東京 花子", en: "Hanako Tokyo", shortcut: "東花子", green: true }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const TEXT = {
+            topTitle: {
+                ja: "いらっしゃいませ。ご用件をお選びください",
+                en: "Welcome. Please select your business."
+            },
+            back: {
+                ja: "◀ 戻る",
+                en: "◀ Back"
+            },
+            callingTitle: {
+                ja: "ただいま呼び出しております",
+                en: "Calling Staff..."
+            },
+            callingMain: {
+                ja: "起動しています。<br>そのままで少々お待ちください。",
+                en: "Launching the iPhone shortcut.<br>Please wait a moment."
+            },
+            callingSub: {
+                ja: "通話中...",
+                en: "Please set the return to the reception screen in the shortcut."
+            },
+            returnTop: {
+                ja: "受付画面へ戻る",
+                en: "Return to reception screen"
+            }
+        };
+
+        let isEnglish = false;
+        let menuHistory = [];
+
+        const menuPage = document.getElementById("menu-page");
+        const callingPage = document.getElementById("calling-page");
+        const langBar = document.getElementById("lang-bar");
+        const langBtn = document.getElementById("lang-btn");
+        const returnBtn = document.getElementById("return-btn");
+
+        function label(item) {
+            return isEnglish ? (item.en || item.ja) : item.ja;
+        }
+
+        function text(key) {
+            return isEnglish ? TEXT[key].en : TEXT[key].ja;
+        }
+
+        function currentGroup() {
+            return menuHistory.length ? menuHistory[menuHistory.length - 1] : null;
+        }
+
+        function currentItems() {
+            const group = currentGroup();
+            return group ? group.children : MENU;
+        }
+
+        function currentTitle() {
+            const group = currentGroup();
+            if (!group) return text("topTitle");
+            return isEnglish ? (group.titleEn || group.en || group.ja) : (group.titleJa || group.ja);
+        }
+
+        function renderMenu() {
+            menuPage.innerHTML = "";
+
+            const title = document.createElement("h1");
+            title.textContent = currentTitle();
+            menuPage.appendChild(title);
+
+            const container = document.createElement("div");
+            container.className = "btn-container";
+            menuPage.appendChild(container);
+
+            currentItems().forEach(function(item) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = item.green ? "main-btn btn-green" : "main-btn";
+                button.textContent = label(item);
+
+                if (item.children && item.children.length) {
+                    button.addEventListener("click", function() {
+                        menuHistory.push(item);
+                        renderMenu();
+                    });
+                } else if (item.shortcut) {
+                    button.addEventListener("click", function() {
+                        runShortcut(item.shortcut);
+                    });
+                }
+
+                container.appendChild(button);
+            });
+
+            if (menuHistory.length) {
+                const backButton = document.createElement("button");
+                backButton.type = "button";
+                backButton.className = "back-btn";
+                backButton.textContent = text("back");
+                backButton.addEventListener("click", function() {
+                    menuHistory.pop();
+                    renderMenu();
+                });
+                menuPage.appendChild(backButton);
             }
         }
 
-        // ========================================================
-        // 📞 ショートカット経由 Dialpad発信
-        // ========================================================
-        // このHTMLから直接 tel: や dialpad:// は起動しません。
-        // Webアプリのボタン押下 → ショートカット「受付Dialpad発信」を起動
-        // → ショートカット側で Dialpad発信 → 待機 → 受付Webアプリへ戻る、という流れです。
-        //
-        // ショートカット名:
-        //   受付Dialpad発信
-        //
-        // ショートカットには、入力として電話番号が渡されます。
-        // ショートカット側では「ショートカットの入力」を使って
-        // tel:電話番号,,,,1 または dialpad://電話番号 を開いてください。
-        //
-        // 例:
-        //   受け取った入力: 05017530562
-        //   ショートカット側で開くURL: tel:05017530562,,,,1
-        //
-        // 復帰タイミングはショートカット側の「待機 秒数」で調整します。
-        const CALL_SHORTCUT_NAME = "受付Dialpad発信";
-
-        function cleanPhoneNumber(phoneNumber) {
-            return String(phoneNumber).replace(/[^0-9+]/g, '');
-        }
-
-        function triggerCall(phoneNumber) {
-            // 1. 受付画面側を呼出中表示にする
-            showPage('page-calling');
-            updateCallingText();
-
-            // 2. ショートカットに渡す番号を整理
-            const cleanNumber = cleanPhoneNumber(phoneNumber);
-
-            // 3. ショートカットを起動し、電話番号を入力として渡す
-            // shortcuts://run-shortcut?name=受付Dialpad発信&input=text&text=05017530562
-            const shortcutUrl =
-                "shortcuts://run-shortcut?name=" +
-                encodeURIComponent(CALL_SHORTCUT_NAME) +
-                "&input=text&text=" +
-                encodeURIComponent(cleanNumber);
-
+        function runShortcut(shortcutName) {
+            showCallingPage();
+            const shortcutUrl = "shortcuts://run-shortcut?name=" + encodeURIComponent(shortcutName);
             window.location.href = shortcutUrl;
-
-            // 4. Webアプリへの復帰はショートカット側で行うため、
-            // HTML側では自動でトップ画面へ戻しません。
         }
 
-        // 呼出中画面のテキストを言語状態に合わせる
-        function updateCallingText() {
-            document.getElementById('text-calling-title').innerText = isEnglish ? "Calling Staff..." : "ただいま呼び出しております";
-            document.getElementById('text-calling-msg').innerHTML = isEnglish ? "Launching the shortcut.<br>Please wait a moment." : "ショートカットを起動しています。<br>そのままで少々お待ちください。";
-        }
-
-        // ========================================================
-        // 🌐 言語切り替えロジック
-        // ========================================================
-        let isEnglish = false;
-        function toggleLanguage() {
-            isEnglish = !isEnglish;
-            document.getElementById('btn-lang').innerText = isEnglish ? "日本語" : "English";
-            
-            // 1面
-            document.getElementById('text-top-title').innerText = isEnglish ? "Welcome. Please select your business." : "いらっしゃいませ。ご用件をお選びください";
-            document.getElementById('btn-general').innerHTML = isEnglish ? "General Reception" : "総合受付";
-            document.getElementById('btn-delivery').innerHTML = isEnglish ? "Delivery / Pickup" : "配達・集荷";
-            document.getElementById('btn-call').innerHTML = isEnglish ? "Call Staff" : "担当者呼出";
-            
-            // 2面
-            document.getElementById('text-dept-title').innerText = isEnglish ? "Please select a department" : "担当の部署をお選びください";
-            document.getElementById('btn-sales').innerHTML = isEnglish ? "Sales Dept." : "営業部";
-            document.getElementById('btn-tech').innerHTML = isEnglish ? "Technology Dept." : "技術製造部";
-            document.getElementById('btn-gyomu').innerHTML = isEnglish ? "Operations Dept." : "業務部";
-            document.getElementById('btn-hirox').innerHTML = isEnglish ? "Hirox Japan Tokyo Office" : "株式会社ハイロックスジャパン東京営業所";
-            
-            // 3面 タイトル
-            document.getElementById('text-sales-title').innerText = isEnglish ? "Please select a staff member (Sales)" : "営業部の担当者をお選びください";
-            document.getElementById('text-tech-title').innerText = isEnglish ? "Please select a staff member (Tech)" : "技術製造部の担当者をお選びください";
-            document.getElementById('text-gyomu-title').innerText = isEnglish ? "Please select a staff member (Operations)" : "業務部の担当者をお選びください";
-            document.getElementById('text-hirox-title').innerText = isEnglish ? "Please select a staff member (Tokyo Office)" : "東京営業所の担当者をお選びください";
-            
-            // 【自動書き換えシステム】
-            const staffButtons = document.querySelectorAll('.staff-btn');
-            staffButtons.forEach(btn => {
-                const jaName = btn.getAttribute('data-ja');
-                const enName = btn.getAttribute('data-en');
-                btn.innerHTML = isEnglish ? enName : jaName;
-            });
-            
-            // 戻るボタン
-            const backButtons = ['btn-back-1', 'btn-back-2', 'btn-back-3', 'btn-back-4', 'btn-back-5'];
-            backButtons.forEach(id => {
-                document.getElementById(id).innerText = isEnglish ? "◀ Back" : "◀ 戻る";
-            });
-
+        function showCallingPage() {
+            menuPage.style.display = "none";
+            callingPage.style.display = "block";
+            langBar.style.display = "none";
             updateCallingText();
         }
+
+        function showMenuPage() {
+            callingPage.style.display = "none";
+            menuPage.style.display = "block";
+            langBar.style.display = "block";
+            menuHistory = [];
+            renderMenu();
+        }
+
+        function updateCallingText() {
+            document.getElementById("calling-title").textContent = text("callingTitle");
+            document.getElementById("calling-main-msg").innerHTML = text("callingMain");
+            document.getElementById("calling-sub-msg").textContent = text("callingSub");
+            returnBtn.textContent = text("returnTop");
+        }
+
+        langBtn.addEventListener("click", function() {
+            isEnglish = !isEnglish;
+            langBtn.textContent = isEnglish ? "日本語" : "English";
+            renderMenu();
+            updateCallingText();
+        });
+
+        returnBtn.addEventListener("click", showMenuPage);
+
+        renderMenu();
     </script>
 </body>
 </html>
