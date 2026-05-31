@@ -221,9 +221,9 @@
     <main id="menu-page" class="page"></main>
 
     <main id="calling-page" class="page calling-page">
-        <h1 id="calling-title">ただいま呼び出しております</h1>
+        <h1 id="calling-title">ただいま対応中です</h1>
         <div class="loader"></div>
-        <p class="status-msg" id="calling-main-msg">ショートカットを起動しています。<br>そのままで少々お待ちください。</p>
+        <p class="status-msg" id="calling-main-msg">恐れ入りますが、終わりましたら<br>「受付画面へ戻る」をタップしてください。</p>
         <p class="sub-msg" id="calling-sub-msg"></p>
         <button class="back-btn" id="return-btn" type="button">受付画面へ戻る</button>
     </main>
@@ -301,8 +301,8 @@
         const TEXT = {
             topTitle: { ja: "いらっしゃいませ。ご用件をお選びください", en: "Welcome. Please select your business." },
             back: { ja: "◀ 戻る", en: "◀ Back" },
-            callingTitle: { ja: "ただいま呼び出しております", en: "Calling Staff..." },
-            callingMain: { ja: "ショートカットを起動しています。<br>そのままで少々お待ちください。", en: "Launching the shortcut.<br>Please wait a moment." },
+            callingTitle: { ja: "ただいま対応中です", en: "Currently responding" },
+            callingMain: { ja: "恐れ入りますが、終わりましたら<br>「受付画面へ戻る」をタップしてください。", en: "When finished,<br>please tap “Return to reception screen.”" },
             callingSub: { ja: "", en: "" },
             returnTop: { ja: "受付画面へ戻る", en: "Return to reception screen" }
         };
@@ -313,7 +313,6 @@
         let menuHistory = [];
         let autoReturnTimer = null;
         let callStartTime = null;
-        let lastShortcutName = null;
 
         const menuPage = document.getElementById("menu-page");
         const callingPage = document.getElementById("calling-page");
@@ -406,8 +405,6 @@
                shortcuts://x-callback-url/run-shortcut の方が安定する場合があるため、
                こちらを使います。
             */
-            lastShortcutName = shortcutName;
-
             // 先にショートカットを起動します。
             openShortcut(shortcutName);
 
