@@ -216,7 +216,7 @@
 
         ファイル名を変える場合は、下の src="assets/company_logo.png" を変更してください。
     -->
-    <img class="logo" src="company_logo.png" alt="会社ロゴ" onerror="this.style.display='none'">
+    <img class="logo" src="assets/company_logo.png" alt="会社ロゴ" onerror="this.style.display='none'">
 
     <main id="menu-page" class="page"></main>
 
@@ -224,6 +224,8 @@
         <h1 id="calling-title">ただいま応対中です。</h1>
         <div class="loader"></div>
         <p class="status-msg" id="calling-main-msg">恐れ入りますが、終わりましたら<br>「受付画面へ戻る」をタップしてください。</p>
+        <p class="sub-msg" id="calling-sub-msg">60秒後に受付画面へ戻ります。</p>
+        <button class="back-btn" id="retry-btn" type="button" style="margin-right: 12px;">もう一度起動</button>
         <button class="back-btn" id="return-btn" type="button">受付画面へ戻る</button>
     </main>
 
@@ -300,8 +302,9 @@
         const TEXT = {
             topTitle: { ja: "いらっしゃいませ。ご用件をお選びください", en: "Welcome. Please select your business." },
             back: { ja: "◀ 戻る", en: "◀ Back" },
-            callingTitle: { ja: "ただいま対応中です。", en: "Calling Staff..." },
-            callingMain: { ja: "恐れ入りますが、終わりましたら<br>「受付画面へ戻る」をタップしてください。", en: "Launching the shortcut.<br>Please wait a moment." },
+            callingTitle: { ja: "ただいま呼び出しております", en: "Calling Staff..." },
+            callingMain: { ja: "ショートカットを起動しています。<br>そのままで少々お待ちください。", en: "Launching the shortcut.<br>Please wait a moment." },
+            callingSub: { ja: "60秒後に受付画面へ戻ります。", en: "This screen will return automatically after 60 seconds." },
             returnTop: { ja: "受付画面へ戻る", en: "Return to reception screen" }
         };
 
@@ -311,12 +314,14 @@
         let menuHistory = [];
         let autoReturnTimer = null;
         let callStartTime = null;
+        let lastShortcutName = null;
 
         const menuPage = document.getElementById("menu-page");
         const callingPage = document.getElementById("calling-page");
         const langBar = document.getElementById("lang-bar");
         const langBtn = document.getElementById("lang-btn");
         const returnBtn = document.getElementById("return-btn");
+        const retryBtn = document.getElementById("retry-btn");
 
         function label(item) {
             return isEnglish ? (item.en || item.ja) : item.ja;
@@ -385,10 +390,30 @@
             }
         }
 
+        function shortcutUrl(shortcutName) {
+            return "shortcuts://x-callback-url/run-shortcut?name=" + encodeURIComponent(shortcutName);
+        }
+
+        function openShortcut(shortcutName) {
+            window.location.href = shortcutUrl(shortcutName);
+        }
+
         function runShortcut(shortcutName) {
+            /*
+               iPad / iPhone のSafariでは、カスタムURLの起動は
+               「ボタンを押した直後の処理」で行う必要があります。
+
+               shortcuts://run-shortcut よりも
+               shortcuts://x-callback-url/run-shortcut の方が安定する場合があるため、
+               こちらを使います。
+            */
+            lastShortcutName = shortcutName;
+
+            // 先にショートカットを起動します。
+            openShortcut(shortcutName);
+
+            // 受付画面側は呼出中画面に切り替えます。
             showCallingPage();
-            const shortcutUrl = "shortcuts://run-shortcut?name=" + encodeURIComponent(shortcutName);
-            window.location.href = shortcutUrl;
         }
 
         function showCallingPage() {
@@ -438,6 +463,7 @@
             document.getElementById("calling-main-msg").innerHTML = text("callingMain");
             document.getElementById("calling-sub-msg").textContent = text("callingSub");
             returnBtn.textContent = text("returnTop");
+            retryBtn.textContent = isEnglish ? "Launch again" : "もう一度起動";
         }
 
         langBtn.addEventListener("click", function() {
@@ -445,6 +471,13 @@
             langBtn.textContent = isEnglish ? "日本語" : "English";
             renderMenu();
             updateCallingText();
+        });
+
+        retryBtn.addEventListener("click", function() {
+            if (lastShortcutName) {
+                openShortcut(lastShortcutName);
+                startAutoReturnTimer();
+            }
         });
 
         returnBtn.addEventListener("click", showMenuPage);
