@@ -2,64 +2,76 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>総合受付システム</title>
     <style>
         /* ========================================================
-           デザイン調整
-           数字や色だけ変更すれば、画面全体の見た目を調整できます。
+           デザイン調整エリア
+           数字や色だけ変更すれば、見た目を調整できます。
            ======================================================== */
         :root {
             --bg-start: #e0f2fe;
             --bg-end: #bae6fd;
+            --title-color: #1e3a8a;
             --btn-start: #1d4ed8;
             --btn-end: #3b82f6;
             --btn-green-start: #2f855a;
             --btn-green-end: #48bb78;
+            --btn-gray: #64748b;
+            --btn-width: 650px;
             --btn-padding: 30px;
             --btn-font-size: 26px;
             --btn-radius: 10px;
-            --lang-font-size: 16px;
-            --lang-padding-y: 12px;
-            --lang-padding-x: 24px;
-            --lang-radius: 30px;
-            --lang-position-bottom: 60px;
-            --lang-position-right: 160px;
+            --logo-width: 180px;
+            --logo-top: 28px;
+            --logo-left: 36px;
+            --auto-return-seconds: 60;
         }
 
         html, body {
+            margin: 0;
+            min-height: 100%;
             touch-action: manipulation;
             -webkit-text-size-adjust: 100%;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
-            min-height: 100vh;
-            margin: 0;
-            padding: 40px 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        h1 {
-            color: #1e3a8a;
-            font-size: 32px;
-            margin: 0 0 40px;
-            font-weight: bold;
-            text-align: center;
-            line-height: 1.4;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
+
+        .logo {
+            position: fixed;
+            top: var(--logo-top);
+            left: var(--logo-left);
+            width: var(--logo-width);
+            max-width: 35vw;
+            height: auto;
+            z-index: 10;
         }
 
         .page {
             width: 100%;
-            max-width: 650px;
-            animation: fadeIn 0.3s ease-in-out;
+            max-width: var(--btn-width);
+            animation: fadeIn 0.25s ease-in-out;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--title-color);
+            font-size: 32px;
+            margin: 0 0 40px;
+            font-weight: bold;
+            line-height: 1.4;
         }
 
         .btn-container {
@@ -84,7 +96,6 @@
             text-align: center;
             cursor: pointer;
             box-shadow: 0 6px 15px rgba(29, 78, 216, 0.15);
-            transition: transform 0.1s, filter 0.1s;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -101,41 +112,33 @@
         .back-btn {
             display: inline-block;
             margin-top: 30px;
-            background-color: #64748b;
+            background-color: var(--btn-gray);
             color: white;
             font-size: 18px;
+            font-weight: bold;
             padding: 12px 30px;
             border-radius: 30px;
             border: none;
             cursor: pointer;
         }
 
-        .back-btn:active {
-            background-color: #475569;
-        }
-
         .lang-container {
             position: fixed;
-            bottom: var(--lang-position-bottom);
-            right: var(--lang-position-right);
+            bottom: 60px;
+            right: 160px;
+            z-index: 10;
         }
 
         .lang-btn {
             background-color: rgba(255, 255, 255, 0.9);
-            color: #1e3a8a;
+            color: var(--title-color);
             border: 1px solid #bae6fd;
-            font-size: var(--lang-font-size);
+            font-size: 16px;
             font-weight: bold;
-            padding: var(--lang-padding-y) var(--lang-padding-x);
-            border-radius: var(--lang-radius);
+            padding: 12px 24px;
+            border-radius: 30px;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-            transition: transform 0.1s, background-color 0.1s;
-        }
-
-        .lang-btn:active {
-            background-color: #e0f2fe;
-            transform: scale(0.95);
         }
 
         .calling-page {
@@ -145,21 +148,21 @@
 
         .status-msg {
             font-size: 24px;
-            color: #1e3a8a;
+            color: var(--title-color);
             font-weight: bold;
-            margin-top: 20px;
             line-height: 1.6;
+            margin: 20px 0 0;
         }
 
         .sub-msg {
             font-size: 16px;
-            color: #1e3a8a;
-            font-weight: normal;
+            color: var(--title-color);
             line-height: 1.7;
+            margin-top: 12px;
         }
 
         .loader {
-            border: 6px solid #f3f3f3;
+            border: 6px solid rgba(255, 255, 255, 0.8);
             border-top: 6px solid #1d4ed8;
             border-radius: 50%;
             width: 50px;
@@ -177,16 +180,51 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        @media (max-width: 700px) {
+            .logo {
+                width: 140px;
+                top: 18px;
+                left: 18px;
+            }
+
+            .lang-container {
+                right: 20px;
+                bottom: 20px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .main-btn {
+                font-size: 22px;
+                padding: 24px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!--
+        ロゴ画像について
+        GitHubでは index.html と同じ場所に assets フォルダを作り、
+        その中に company_logo.png を入れてください。
+
+        例:
+        index.html
+        assets/company_logo.png
+
+        ファイル名を変える場合は、下の src="assets/company_logo.png" を変更してください。
+    -->
+    <img class="logo" src="assets/company_logo.png" alt="会社ロゴ" onerror="this.style.display='none'">
+
     <main id="menu-page" class="page"></main>
 
     <main id="calling-page" class="page calling-page">
-        <h1 id="calling-title">ただいま呼び出しております</h1>
+        <h1 id="calling-title">ただいま応対中です。</h1>
         <div class="loader"></div>
-        <p class="status-msg" id="calling-main-msg">起動しています。<br>そのままで少々お待ちください。</p>
-        <p class="sub-msg" id="calling-sub-msg">通話中…</p>
+        <p class="status-msg" id="calling-main-msg">恐れ入りますが、終わりましたら<br>「受付画面へ戻る」をタップしてください。</p>
+        <p class="sub-msg" id="calling-sub-msg">60秒後に受付画面へ戻ります。</p>
         <button class="back-btn" id="return-btn" type="button">受付画面へ戻る</button>
     </main>
 
@@ -197,27 +235,9 @@
     <script>
         /* ========================================================
            発信先・ボタン編集エリア
-           ========================================================
-
-           【編集方法】
-           1. ボタンを追加する場合
-              下の MENU に、同じ形の行をコピーして追加してください。
-
-           2. ボタンを削除する場合
-              不要な { ... } のかたまりを削除してください。
-
-           3. 発信先を変更する場合
-              shortcut: "受付" の "受付" 部分を、ショートカット名に合わせて変更してください。
-
-           4. 階層を作る場合
-              children: [ ... ] の中にボタンを入れると、次の画面が作られます。
-
-           5. 緑色ボタンにしたい場合
-              green: true を付けてください。
-
-           ※ shortcut 名は、iPadの「ショートカット」アプリ内の名前と完全一致させてください。
-           ※ 電話番号やDialpadの処理はHTML内には置かず、各ショートカット側で設定してください。
-        */
+           追加、削除、変更は基本的にここだけ編集してください。
+           shortcut は iPhone / iPad のショートカット名と完全一致させます。
+           ======================================================== */
         const MENU = [
             { ja: "総合受付", en: "General Reception", shortcut: "受付" },
             { ja: "配達・集荷", en: "Delivery / Pickup", shortcut: "配集" },
@@ -279,34 +299,20 @@
         ];
 
         const TEXT = {
-            topTitle: {
-                ja: "いらっしゃいませ。ご用件をお選びください",
-                en: "Welcome. Please select your business."
-            },
-            back: {
-                ja: "◀ 戻る",
-                en: "◀ Back"
-            },
-            callingTitle: {
-                ja: "ただいま呼び出しております",
-                en: "Calling Staff..."
-            },
-            callingMain: {
-                ja: "起動しています。<br>そのままで少々お待ちください。",
-                en: "Launching the iPhone shortcut.<br>Please wait a moment."
-            },
-            callingSub: {
-                ja: "通話中...",
-                en: "Please set the return to the reception screen in the shortcut."
-            },
-            returnTop: {
-                ja: "受付画面へ戻る",
-                en: "Return to reception screen"
-            }
+            topTitle: { ja: "いらっしゃいませ。ご用件をお選びください", en: "Welcome. Please select your business." },
+            back: { ja: "◀ 戻る", en: "◀ Back" },
+            callingTitle: { ja: "ただいま呼び出しております", en: "Calling Staff..." },
+            callingMain: { ja: "ショートカットを起動しています。<br>そのままで少々お待ちください。", en: "Launching the shortcut.<br>Please wait a moment." },
+            callingSub: { ja: "60秒後に受付画面へ戻ります。", en: "This screen will return automatically after 60 seconds." },
+            returnTop: { ja: "受付画面へ戻る", en: "Return to reception screen" }
         };
+
+        const AUTO_RETURN_SECONDS = 60;
 
         let isEnglish = false;
         let menuHistory = [];
+        let autoReturnTimer = null;
+        let callStartTime = null;
 
         const menuPage = document.getElementById("menu-page");
         const callingPage = document.getElementById("calling-page");
@@ -392,14 +398,41 @@
             callingPage.style.display = "block";
             langBar.style.display = "none";
             updateCallingText();
+            startAutoReturnTimer();
         }
 
         function showMenuPage() {
+            clearAutoReturnTimer();
             callingPage.style.display = "none";
             menuPage.style.display = "block";
             langBar.style.display = "block";
             menuHistory = [];
             renderMenu();
+        }
+
+        function startAutoReturnTimer() {
+            clearAutoReturnTimer();
+            callStartTime = Date.now();
+            autoReturnTimer = window.setTimeout(showMenuPage, AUTO_RETURN_SECONDS * 1000);
+        }
+
+        function clearAutoReturnTimer() {
+            if (autoReturnTimer) {
+                window.clearTimeout(autoReturnTimer);
+                autoReturnTimer = null;
+            }
+            callStartTime = null;
+        }
+
+        function checkAutoReturnAfterSafariResume() {
+            if (!callStartTime || callingPage.style.display !== "block") return;
+            const elapsedSeconds = Math.floor((Date.now() - callStartTime) / 1000);
+            if (elapsedSeconds >= AUTO_RETURN_SECONDS) {
+                showMenuPage();
+            } else {
+                if (autoReturnTimer) window.clearTimeout(autoReturnTimer);
+                autoReturnTimer = window.setTimeout(showMenuPage, (AUTO_RETURN_SECONDS - elapsedSeconds) * 1000);
+            }
         }
 
         function updateCallingText() {
@@ -417,6 +450,11 @@
         });
 
         returnBtn.addEventListener("click", showMenuPage);
+
+        window.addEventListener("focus", checkAutoReturnAfterSafariResume);
+        document.addEventListener("visibilitychange", function() {
+            if (!document.hidden) checkAutoReturnAfterSafariResume();
+        });
 
         renderMenu();
     </script>
