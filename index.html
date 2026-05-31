@@ -25,7 +25,7 @@
             --logo-width: 180px;
             --logo-top: 28px;
             --logo-left: 36px;
-            --auto-return-seconds: 60;
+            --auto-return-seconds: 45;
         }
 
         html, body {
@@ -221,11 +221,10 @@
     <main id="menu-page" class="page"></main>
 
     <main id="calling-page" class="page calling-page">
-        <h1 id="calling-title">ただいま応対中です。</h1>
+        <h1 id="calling-title">ただいま呼び出しております</h1>
         <div class="loader"></div>
-        <p class="status-msg" id="calling-main-msg">恐れ入りますが、終わりましたら<br>「受付画面へ戻る」をタップしてください。</p>
-        <p class="sub-msg" id="calling-sub-msg">60秒後に受付画面へ戻ります。</p>
-        <button class="back-btn" id="retry-btn" type="button" style="margin-right: 12px;">もう一度起動</button>
+        <p class="status-msg" id="calling-main-msg">ショートカットを起動しています。<br>そのままで少々お待ちください。</p>
+        <p class="sub-msg" id="calling-sub-msg"></p>
         <button class="back-btn" id="return-btn" type="button">受付画面へ戻る</button>
     </main>
 
@@ -304,11 +303,11 @@
             back: { ja: "◀ 戻る", en: "◀ Back" },
             callingTitle: { ja: "ただいま呼び出しております", en: "Calling Staff..." },
             callingMain: { ja: "ショートカットを起動しています。<br>そのままで少々お待ちください。", en: "Launching the shortcut.<br>Please wait a moment." },
-            callingSub: { ja: "60秒後に受付画面へ戻ります。", en: "This screen will return automatically after 60 seconds." },
+            callingSub: { ja: "", en: "" },
             returnTop: { ja: "受付画面へ戻る", en: "Return to reception screen" }
         };
 
-        const AUTO_RETURN_SECONDS = 60;
+        const AUTO_RETURN_SECONDS = 45;
 
         let isEnglish = false;
         let menuHistory = [];
@@ -321,7 +320,7 @@
         const langBar = document.getElementById("lang-bar");
         const langBtn = document.getElementById("lang-btn");
         const returnBtn = document.getElementById("return-btn");
-        const retryBtn = document.getElementById("retry-btn");
+        
 
         function label(item) {
             return isEnglish ? (item.en || item.ja) : item.ja;
@@ -463,7 +462,7 @@
             document.getElementById("calling-main-msg").innerHTML = text("callingMain");
             document.getElementById("calling-sub-msg").textContent = text("callingSub");
             returnBtn.textContent = text("returnTop");
-            retryBtn.textContent = isEnglish ? "Launch again" : "もう一度起動";
+            
         }
 
         langBtn.addEventListener("click", function() {
@@ -471,13 +470,6 @@
             langBtn.textContent = isEnglish ? "日本語" : "English";
             renderMenu();
             updateCallingText();
-        });
-
-        retryBtn.addEventListener("click", function() {
-            if (lastShortcutName) {
-                openShortcut(lastShortcutName);
-                startAutoReturnTimer();
-            }
         });
 
         returnBtn.addEventListener("click", showMenuPage);
