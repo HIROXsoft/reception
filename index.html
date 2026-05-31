@@ -389,7 +389,7 @@
         }
 
         function shortcutUrl(shortcutName) {
-            return "shortcuts://x-callback-url/run-shortcut?name=" + encodeURIComponent(shortcutName);
+            return "shortcuts://run-shortcut?name=" + encodeURIComponent(shortcutName);
         }
 
         function openShortcut(shortcutName) {
@@ -402,7 +402,7 @@
                「ボタンを押した直後の処理」で行う必要があります。
 
                shortcuts://run-shortcut よりも
-               shortcuts://x-callback-url/run-shortcut の方が安定する場合があるため、
+               shortcuts://run-shortcut の方が安定する場合があるため、
                こちらを使います。
             */
             // 先にショートカットを起動します。
