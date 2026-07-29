@@ -131,7 +131,6 @@
       justify-content: center;
       gap: 18px;
       transition: transform 120ms ease, filter 120ms ease;
-      text-decoration: none;
     }
 
     .main-button:active {
@@ -378,9 +377,9 @@
       <h1 id="mainTitle">いらっしゃいませ。<br>ご用件をお選びください</h1>
 
       <div class="menu-grid">
-        <a class="main-button" data-action="reception" href="tel:05017065968" role="button">
+        <button class="main-button" type="button" data-action="reception">
           <span class="button-ja" data-i18n-ja="総合受付" data-i18n-en="General Reception">総合受付</span>
-        </a>
+        </button>
 
         <button class="main-button" type="button" data-action="map">
           <span class="button-ja" data-i18n-ja="配達・集荷" data-i18n-en="Delivery / Pickup">配達・集荷</span>
@@ -432,10 +431,11 @@
     // 30秒自動戻り。変更したい場合はこの数字だけ変更してください。
     const AUTO_RETURN_SECONDS = 30;
 
-    // WindowsでTELプロトコルに関連付けたDialpadを起動します。
-    // 総合受付はJavaScript経由ではなく、href="tel:..." のネイティブリンクから直接呼び出します。
-    // Edgeにユーザー操作として認識されやすく、ポップアップや新規タブを使用しません。
-    const GENERAL_RECEPTION_URL = "tel:05017065968";
+    // 総合受付ボタンを押した時にDialpadデスクトップアプリを直接起動するURL。
+    // 050 1706 5968 を国際形式 +81 50 1706 5968 に変換しています。
+    // ブラウザの新規タブやポップアップを出さないため、https://dialpad.com/launch ではなく
+    // Dialpad公式のカスタムプロトコル dialpad:// を使います。
+    const GENERAL_RECEPTION_URL = "dialpad://+815017065965?launchMinimode=1";
 
     // ロゴ画像。SVGをHTML内に埋め込み済みです。
     const COMPANY_LOGO_FILE = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODEgNTgiIHdpZHRoPSIyODEiIGhlaWdodD0iNTgiPgogIDxzdHlsZT4KICAgIDpyb290IHsKICAgICAgLS1jMTogIzAwMDA4MDsgLyog4piFIOODoeOCpOODs+OCq+ODqeODvO+8iOWhl+OCiu+8iSovCiAgICAgIC0tczE6ICMwMDAwODA7IC8qIOKYhSDjgrnjg4jjg63jg7zjgq/jgqvjg6njg7wgKi8KICAgICAgLS1zdzogMC45OTIxOyAvKiDjgrnjg4jjg63jg7zjgq/luYUgKi8KICAgIH0KICA8L3N0eWxlPgoKICA8IS0tIEgg5a2XIC0tPgogIDxwYXRoIGZpbGw9InZhcigtLWMxKSIgc3Ryb2tlPSJ2YXIoLS1zMSkiIHN0cm9rZS13aWR0aD0idmFyKC0tc3cpIgogICAgZD0iTTMuMzAyLDMyLjc1MmMwLDEuNTA0LDAuNTk3LDIuOTQ1LDEuNjYxLDQuMDA5YzEuMDYzLDEuMDYzLDIuNTA1LDEuNjYsNC4wMDksMS42NmMxLjUwMywwLDIuOTQ1LTAuNTk4LDQuMDA5LTEuNjYKICAgIGMxLjA2My0xLjA2MywxLjY2LTIuNTA1LDEuNjYtNC4wMDl2LTUuNjY5aDM0LjAxNnY1LjY2OWMwLDEuNTA0LDAuNTk4LDIuOTQ1LDEuNjYxLDQuMDA5YzEuMDYzLDEuMDYzLDIuNTA1LDEuNjYsNC4wMDksMS42NgogICAgYzEuNTAzLDAsMi45NDUtMC41OTgsNC4wMDktMS42NmMxLjA2My0xLjA2MywxLjY2LTIuNTA1LDEuNjYtNC4wMDlWMTAuMDc0YzAtMS41MDMtMC41OTgtMi45NDUtMS42Ni00LjAwOQogICAgYy0xLjA2My0xLjA2My0yLjUwNi0xLjY2LTQuMDA5LTEuNjZjLTEuNTA0LDAtMi45NDYsMC41OTctNC4wMDksMS42NmMtMS4wNjMsMS4wNjMtMS42NjEsMi41MDUtMS42NjEsNC4wMDl2NS42NjlIMTQuNjQxdi01LjY2OQogICAgYzAtMS41MDMtMC41OTctMi45NDUtMS42Ni00LjAwOWMtMS4wNjMtMS4wNjMtMi41MDUtMS42Ni00LjAwOS0xLjY2Yy0xLjUwNCwwLTIuOTQ2LDAuNTk3LTQuMDA5LDEuNjYKICAgIGMtMS4wNjMsMS4wNjMtMS42NjEsMi41MDUtMS42NjEsNC4wMDlWMzIuNzUyIi8+CgogIDwhLS0gSSDlrZfvvIjnuKbmo5LvvIkgLS0+CiAgPHBhdGggZmlsbD0idmFyKC0tYzEpIiBzdHJva2U9InZhcigtLXMxKSIKICAgIGQ9Ik02NS42NjQsMTcuNzg1djE0Ljk2N2MwLDEuNTA0LDAuNTk4LDIuOTQ1LDEuNjYxLDQuMDA5YzEuMDYzLDEuMDYzLDIuNTA1LDEuNjYsNC4wMDksMS42NgogICAgYzEuNTAzLDAsMi45NDUtMC41OTgsNC4wMDktMS42NmMxLjA2My0xLjA2MywxLjY2LTIuNTA1LDEuNjYtNC4wMDlWMTcuNzg1SDY1LjY2NCIvPgoKICA8IS0tIEkg5a2X77yI5LiK5Li477yJIC0tPgogIDxwYXRoIGZpbGw9InZhcigtLWMxKSIgc3Ryb2tlPSJ2YXIoLS1zMSkiIHN0cm9rZS13aWR0aD0idmFyKC0tc3cpIgogICAgZD0iTTY0LjUzLDEwLjA3NGMwLDEuMzgyLDAuNzE3LDIuNzA4LDEuOTkzLDMuNjg1YzEuMjc1LDAuOTc4LDMuMDA2LDEuNTI2LDQuODExLDEuNTI2CiAgICBjMS44MDQsMCwzLjUzNC0wLjU0OSw0LjgxMS0xLjUyNmMxLjI3NS0wLjk3NywxLjk5Mi0yLjMwMywxLjk5Mi0zLjY4NWMwLTEuMzgyLTAuNzE3LTIuNzA4LTEuOTkyLTMuNjg1CiAgICBjLTEuMjc2LTAuOTc4LTMuMDA3LTEuNTI2LTQuODExLTEuNTI2Yy0xLjgwNSwwLTMuNTM1LDAuNTQ5LTQuODExLDEuNTI2QzY1LjI0Nyw3LjM2Nyw2NC41Myw4LjY5Miw2NC41MywxMC4wNzQiLz4KCiAgPCEtLSBSIOWtlyAtLT4KICA8bGluZSBmaWxsPSJub25lIiBzdHJva2U9InZhcigtLXMxKSIgc3Ryb2tlLXdpZHRoPSJ2YXIoLS1zdykiIHgxPSIxMDAuNjkiIHkxPSIzMy4zNTYiIHgyPSIxNDYuODk1IiB5Mj0iNTQuOTAyIi8+CiAgPHBhdGggZmlsbD0idmFyKC0tYzEpIiBzdHJva2U9InZhcigtLXMxKSIgc3Ryb2tlLXdpZHRoPSJ2YXIoLS1zdykiCiAgICBkPSJNMTQ2Ljg5NSw1NC45MDJjMS4zNjEsMC42MzIsMi45MTksMC42OTcsNC4zMjksMC4xODNjMS40MTEtMC41MTQsMi41Ni0xLjU2NiwzLjE5NS0yLjkyNwogICAgYzAuNjM1LTEuMzYsMC43MDQtMi45MTgsMC4xOTMtNC4zMjlzLTEuNTYyLTIuNTYzLTIuOTIxLTMuMjAxbC0yNy45LTEzLjAxaDYuNTAzYzMuMTgzLTAuNTg0LDYuMDYxLTIuMjY1LDguMTMyLTQuNzUxCiAgICBzMy4yMDYtNS42MiwzLjIwNi04Ljg1NmMwLTMuMjM2LTEuMTM0LTYuMzctMy4yMDYtOC44NTVzLTQuOTQ5LTQuMTY3LTguMTMyLTQuNzVIODguMzQyYy0xLjUwNCwwLTIuOTQ2LDAuNTk3LTQuMDA5LDEuNjYKICAgIGMtMS4wNjMsMS4wNjMtMS42NjEsMi41MDUtMS42NjEsNC4wMDl2MjIuNjc4YzAsMS41MDQsMC41OTcsMi45NDUsMS42NjEsNC4wMDljMS4wNjMsMS4wNjMsMi41MDUsMS42Niw0LjAwOSwxLjY2CiAgICBjMS41MDMsMCwyLjk0NS0wLjU5OCw0LjAwOS0xLjY2YzEuMDYzLTEuMDYzLDEuNjYtMi41MDUsMS42Ni00LjAwOVYxMy40NzZoMzEuNzQ4YzEuMjAzLDAsMi4zNTYsMC40NzgsMy4yMDcsMS4zMjgKICAgIHMxLjMyOSwyLjAwNCwxLjMyOSwzLjIwN2MwLDEuMjAzLTAuNDc4LDIuMzU2LTEuMzI5LDMuMjA3cy0yLjAwNCwxLjMyOS0zLjIwNywxLjMyOWgtMjIuNjc3Yy0xLjI5MSwwLTIuNTQzLDAuNDQtMy41NDksMS4yNDkKICAgIGMtMS4wMDYsMC44MDktMS43MDcsMS45MzYtMS45ODYsMy4xOTZzLTAuMTE5LDIuNTc5LDAuNDUzLDMuNzM2czEuNTIxLDIuMDg0LDIuNjkxLDIuNjI5Ii8+CgogIDwhLS0gTyDlrZcgLS0+CiAgPHBhdGggZmlsbD0idmFyKC0tYzEpIiBzdHJva2U9InZhcigtLXMxKSIgc3Ryb2tlLXdpZHRoPSJ2YXIoLS1zdykiCiAgICBkPSJNMTQ0Ljc1MSwyMS40MTNjMC00LjQ2MSwzLjM0NS04Ljc0LDkuMjk5LTExLjg5NXMxNC4wMjktNC45MjcsMjIuNDQ5LTQuOTI3czE2LjQ5NSwxLjc3MiwyMi40NDksNC45MjcKICAgIHM5LjI5OSw3LjQzNCw5LjI5OSwxMS44OTVzLTMuMzQ1LDguNzQtOS4yOTksMTEuODk2Yy01Ljk1NCwzLjE1NC0xNC4wMjksNC45MjctMjIuNDQ5LDQuOTI3cy0xNi40OTUtMS43NzItMjIuNDQ5LTQuOTI3CiAgICBDMTQ4LjA5NiwzMC4xNTMsMTQ0Ljc1MSwyNS44NzUsMTQ0Ljc1MSwyMS40MTMgTTE1Ni40NTIsMjEuNDEzYzAsMi42NTgsMi4xMTIsNS4yMDgsNS44NzEsNy4wODcKICAgIGMzLjc2MSwxLjg4LDguODU4LDIuOTM2LDE0LjE3NiwyLjkzNmM1LjMxNiwwLDEwLjQxNi0xLjA1NiwxNC4xNzUtMi45MzZjMy43Ni0xLjg4LDUuODcyLTQuNDI5LDUuODcyLTcuMDg3CiAgICBzLTIuMTEyLTUuMjA4LTUuODcyLTcuMDg3Yy0zLjc1OS0xLjg4LTguODU4LTIuOTM2LTE0LjE3NS0yLjkzNmMtNS4zMTcsMC0xMC40MTUsMS4wNTYtMTQuMTc2LDIuOTM2CiAgICBDMTU4LjU2NCwxNi4yMDUsMTU2LjQ1MiwxOC43NTUsMTU2LjQ1MiwyMS40MTMiLz4KCiAgPCEtLSBYIOWtlyAtLT4KICA8cGF0aCBmaWxsPSJ2YXIoLS1jMSkiIHN0cm9rZT0idmFyKC0tczEpIiBzdHJva2Utd2lkdGg9InZhcigtLXN3KSIKICAgIGQ9Ik0yNzQuMTQ3LDI3LjQ5M2MxLjM5NiwwLjU2MywyLjUwOSwxLjY1NiwzLjA5OCwzLjA0MWMwLjU4OSwxLjM4MywwLjYwMywyLjk0NCwwLjA0LDQuMzQKICAgIGMtMC41NjMsMS4zOTUtMS42NTUsMi41MDgtMy4wNCwzLjA5OGMtMS4zODQsMC41ODgtMi45NDQsMC42MDMtNC4zMzksMC4wNGwtMjcuMzYyLTEwLjk0M2wtMjcuNDY3LDEwLjk4NwogICAgYy0xLjExOSwwLjQyNC0yLjM0NSwwLjQ4NC0zLjUsMC4xN2MtMS4xNTYtMC4zMTQtMi4xODMtMC45ODctMi45MzMtMS45MjJjLTAuNzUxLTAuOTM0LTEuMTg2LTIuMDgtMS4yNDMtMy4yNzYKICAgIHMwLjI2NC0yLjM4MSwwLjkyMS0zLjM4M2MwLjY1Ni0xLjAwMSwxLjYxMi0xLjc3LDIuNzMyLTIuMTk1bDE2LjIyNi02LjQ4OWwtMTQuMTA0LTUuNjQxYy0xLjM4Mi0wLjU2OS0yLjQ4NC0xLjY2LTMuMDY1LTMuMDM2CiAgICBjLTAuNTgyLTEuMzc2LTAuNTk3LTIuOTI2LTAuMDQyLTQuMzEzczEuNjM1LTIuNSwzLjAwNS0zLjA5NXMyLjkyMS0wLjYyNiw0LjMxMy0wLjA4NWwyNS4xNjEsMTAuMDYzTDI2Ny42NTEsNC44MQogICAgYzEuMTEyLTAuNDQ1LDIuMzM3LTAuNTI3LDMuNDk3LTAuMjMzYzEuMTYyLDAuMjk0LDIuMiwwLjk0NywyLjk2NywxLjg2OGMwLjc2NywwLjkyLDEuMjIzLDIuMDYsMS4zMDIsMy4yNTQKICAgIGMwLjA3OSwxLjE5NS0wLjIyMiwyLjM4NS0wLjg2LDMuMzk4Yy0wLjYzOCwxLjAxNC0xLjU4MSwxLjc5OS0yLjY5MywyLjI0M2wtMTQuMDUxLDUuNjJMMjc0LjE0NywyNy40OTMiLz4KCjwvc3ZnPgo=";
@@ -523,10 +523,44 @@
     }
 
     function openReception() {
-      // href="tel:..." の既定動作は止めず、同じタップ内で対応中画面へ切り替えます。
-      // Dialpadの起動はブラウザのネイティブTELリンク処理に任せます。
+      // 先に画面を「ただいま対応中です」に切り替えます。
+      // その後、同じタブ内でDialpadアプリを起動します。
       showScreen("calling");
       startAutoReturn(document.getElementById("callingCountdown"));
+
+      if (!GENERAL_RECEPTION_URL) return;
+
+      try {
+        launchDialpadWithoutNewTab(GENERAL_RECEPTION_URL);
+      } catch (error) {
+        showError(currentText().popupBlocked);
+      }
+    }
+
+    function launchDialpadWithoutNewTab(url) {
+      // window.open() や target="_blank" は使わず、非表示iframeで
+      // dialpad:// を呼び出します。これにより新しいタブやポップアップを出しません。
+      const previousFrame = document.getElementById("dialpadLaunchFrame");
+      if (previousFrame) previousFrame.remove();
+
+      const frame = document.createElement("iframe");
+      frame.id = "dialpadLaunchFrame";
+      frame.title = "Dialpad Launcher";
+      frame.setAttribute("aria-hidden", "true");
+      frame.style.position = "fixed";
+      frame.style.width = "1px";
+      frame.style.height = "1px";
+      frame.style.left = "-10px";
+      frame.style.top = "-10px";
+      frame.style.opacity = "0";
+      frame.style.pointerEvents = "none";
+      document.body.appendChild(frame);
+      frame.src = url;
+
+      window.setTimeout(() => {
+        const currentFrame = document.getElementById("dialpadLaunchFrame");
+        if (currentFrame) currentFrame.remove();
+      }, 3000);
     }
 
     function showMapGuide() {
