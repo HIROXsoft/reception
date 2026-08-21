@@ -172,26 +172,49 @@
 
     .fullscreen-icon-button {
       position: fixed;
-      top: clamp(18px, 1.5vw, 34px);
-      right: clamp(18px, 1.5vw, 34px);
-      z-index: 20;
-      width: clamp(46px, 3.2vw, 72px);
-      height: clamp(46px, 3.2vw, 72px);
-      border: 0;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.86);
-      color: var(--navy);
-      box-shadow: 0 8px 22px rgba(22, 48, 91, 0.14);
-      font-size: clamp(22px, 1.7vw, 38px);
-      font-weight: 900;
+      right: 12px;
+      bottom: 12px;
+      z-index: 100;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.38);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.34);
+      color: rgba(30, 58, 104, 0.70);
+      box-shadow: none;
+      font-size: 22px;
+      font-weight: 700;
       line-height: 1;
       display: grid;
       place-items: center;
       cursor: pointer;
+      opacity: 0.55;
+      transition: opacity 120ms ease, transform 120ms ease, background 120ms ease;
+    }
+
+    .fullscreen-icon-button:hover,
+    .fullscreen-icon-button:focus-visible {
+      opacity: 0.95;
+      background: rgba(255, 255, 255, 0.72);
     }
 
     .fullscreen-icon-button:active {
       transform: scale(0.94);
+    }
+
+    /* 時間外の黒画面でも全画面へ切り替えられるよう、さらに控えめに表示 */
+    .fullscreen-icon-button.closed-mode {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.28);
+      opacity: 0.45;
+    }
+
+    .fullscreen-icon-button.closed-mode:hover,
+    .fullscreen-icon-button.closed-mode:focus-visible {
+      background: rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.60);
+      opacity: 0.85;
     }
 
     .status-wrap {
@@ -363,6 +386,40 @@
       .menu-grid { grid-template-columns: 1fr; }
       .main-button { min-height: 180px; }
     }
+
+
+    /* 受付時間外画面 */
+    .closed-screen {
+      background: #000;
+      color: #6b7280;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .closed-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      opacity: 0.42;
+    }
+
+    .closed-title {
+      margin: 0;
+      font-size: clamp(34px, 3vw, 72px);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .closed-time {
+      margin: 0;
+      font-size: clamp(18px, 1.4vw, 34px);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
   </style>
 </head>
 <body>
@@ -424,6 +481,15 @@
     </footer>
   </section>
 
+
+
+  <section id="closedScreen" class="screen closed-screen" aria-label="受付時間外">
+    <div class="closed-wrap">
+      <h2 class="closed-title">受付時間外です</h2>
+      <p class="closed-time">受付時間　平日 9:00～17:30</p>
+    </div>
+  </section>
+
   <script>
     // ========================================================
     // Surface Studio 2 / Windows HTML版 受付アプリ設定
@@ -431,11 +497,20 @@
     // 30秒自動戻り。変更したい場合はこの数字だけ変更してください。
     const AUTO_RETURN_SECONDS = 30;
 
+    // ========================================================
+    // 受付時間設定
+    // 平日 9:00～17:30 のみ受付画面を表示します。
+    // 土日・日本の祝日は終日、時間外画面（暗転）を表示します。
+    // ========================================================
+    const BUSINESS_START_MINUTES = 9 * 60;
+    const BUSINESS_END_MINUTES = 17 * 60 + 30;
+    const BUSINESS_CHECK_INTERVAL_MS = 15 * 1000;
+
     // 総合受付ボタンを押した時にDialpadデスクトップアプリを直接起動するURL。
     // 050 1706 5968 を国際形式 +81 50 1706 5968 に変換しています。
     // ブラウザの新規タブやポップアップを出さないため、https://dialpad.com/launch ではなく
     // Dialpad公式のカスタムプロトコル dialpad:// を使います。
-    const GENERAL_RECEPTION_URL = "dialpad://+815017541598?launchMinimode=1";
+    const GENERAL_RECEPTION_URL = "dialpad://+815017065968?launchMinimode=1";
 
     // ロゴ画像。SVGをHTML内に埋め込み済みです。
     const COMPANY_LOGO_FILE = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODEgNTgiIHdpZHRoPSIyODEiIGhlaWdodD0iNTgiPgogIDxzdHlsZT4KICAgIDpyb290IHsKICAgICAgLS1jMTogIzAwMDA4MDsgLyog4piFIOODoeOCpOODs+OCq+ODqeODvO+8iOWhl+OCiu+8iSovCiAgICAgIC0tczE6ICMwMDAwODA7IC8qIOKYhSDjgrnjg4jjg63jg7zjgq/jgqvjg6njg7wgKi8KICAgICAgLS1zdzogMC45OTIxOyAvKiDjgrnjg4jjg63jg7zjgq/luYUgKi8KICAgIH0KICA8L3N0eWxlPgoKICA8IS0tIEgg5a2XIC0tPgogIDxwYXRoIGZpbGw9InZhcigtLWMxKSIgc3Ryb2tlPSJ2YXIoLS1zMSkiIHN0cm9rZS13aWR0aD0idmFyKC0tc3cpIgogICAgZD0iTTMuMzAyLDMyLjc1MmMwLDEuNTA0LDAuNTk3LDIuOTQ1LDEuNjYxLDQuMDA5YzEuMDYzLDEuMDYzLDIuNTA1LDEuNjYsNC4wMDksMS42NmMxLjUwMywwLDIuOTQ1LTAuNTk4LDQuMDA5LTEuNjYKICAgIGMxLjA2My0xLjA2MywxLjY2LTIuNTA1LDEuNjYtNC4wMDl2LTUuNjY5aDM0LjAxNnY1LjY2OWMwLDEuNTA0LDAuNTk4LDIuOTQ1LDEuNjYxLDQuMDA5YzEuMDYzLDEuMDYzLDIuNTA1LDEuNjYsNC4wMDksMS42NgogICAgYzEuNTAzLDAsMi45NDUtMC41OTgsNC4wMDktMS42NmMxLjA2My0xLjA2MywxLjY2LTIuNTA1LDEuNjYtNC4wMDlWMTAuMDc0YzAtMS41MDMtMC41OTgtMi45NDUtMS42Ni00LjAwOQogICAgYy0xLjA2My0xLjA2My0yLjUwNi0xLjY2LTQuMDA5LTEuNjZjLTEuNTA0LDAtMi45NDYsMC41OTctNC4wMDksMS42NmMtMS4wNjMsMS4wNjMtMS42NjEsMi41MDUtMS42NjEsNC4wMDl2NS42NjlIMTQuNjQxdi01LjY2OQogICAgYzAtMS41MDMtMC41OTctMi45NDUtMS42Ni00LjAwOWMtMS4wNjMtMS4wNjMtMi41MDUtMS42Ni00LjAwOS0xLjY2Yy0xLjUwNCwwLTIuOTQ2LDAuNTk3LTQuMDA5LDEuNjYKICAgIGMtMS4wNjMsMS4wNjMtMS42NjEsMi41MDUtMS42NjEsNC4wMDlWMzIuNzUyIi8+CgogIDwhLS0gSSDlrZfvvIjnuKbmo5LvvIkgLS0+CiAgPHBhdGggZmlsbD0idmFyKC0tYzEpIiBzdHJva2U9InZhcigtLXMxKSIKICAgIGQ9Ik02NS42NjQsMTcuNzg1djE0Ljk2N2MwLDEuNTA0LDAuNTk4LDIuOTQ1LDEuNjYxLDQuMDA5YzEuMDYzLDEuMDYzLDIuNTA1LDEuNjYsNC4wMDksMS42NgogICAgYzEuNTAzLDAsMi45NDUtMC41OTgsNC4wMDktMS42NmMxLjA2My0xLjA2MywxLjY2LTIuNTA1LDEuNjYtNC4wMDlWMTcuNzg1SDY1LjY2NCIvPgoKICA8IS0tIEkg5a2X77yI5LiK5Li477yJIC0tPgogIDxwYXRoIGZpbGw9InZhcigtLWMxKSIgc3Ryb2tlPSJ2YXIoLS1zMSkiIHN0cm9rZS13aWR0aD0idmFyKC0tc3cpIgogICAgZD0iTTY0LjUzLDEwLjA3NGMwLDEuMzgyLDAuNzE3LDIuNzA4LDEuOTkzLDMuNjg1YzEuMjc1LDAuOTc4LDMuMDA2LDEuNTI2LDQuODExLDEuNTI2CiAgICBjMS44MDQsMCwzLjUzNC0wLjU0OSw0LjgxMS0xLjUyNmMxLjI3NS0wLjk3NywxLjk5Mi0yLjMwMywxLjk5Mi0zLjY4NWMwLTEuMzgyLTAuNzE3LTIuNzA4LTEuOTkyLTMuNjg1CiAgICBjLTEuMjc2LTAuOTc4LTMuMDA3LTEuNTI2LTQuODExLTEuNTI2Yy0xLjgwNSwwLTMuNTM1LDAuNTQ5LTQuODExLDEuNTI2QzY1LjI0Nyw3LjM2Nyw2NC41Myw4LjY5Miw2NC41MywxMC4wNzQiLz4KCiAgPCEtLSBSIOWtlyAtLT4KICA8bGluZSBmaWxsPSJub25lIiBzdHJva2U9InZhcigtLXMxKSIgc3Ryb2tlLXdpZHRoPSJ2YXIoLS1zdykiIHgxPSIxMDAuNjkiIHkxPSIzMy4zNTYiIHgyPSIxNDYuODk1IiB5Mj0iNTQuOTAyIi8+CiAgPHBhdGggZmlsbD0idmFyKC0tYzEpIiBzdHJva2U9InZhcigtLXMxKSIgc3Ryb2tlLXdpZHRoPSJ2YXIoLS1zdykiCiAgICBkPSJNMTQ2Ljg5NSw1NC45MDJjMS4zNjEsMC42MzIsMi45MTksMC42OTcsNC4zMjksMC4xODNjMS40MTEtMC41MTQsMi41Ni0xLjU2NiwzLjE5NS0yLjkyNwogICAgYzAuNjM1LTEuMzYsMC43MDQtMi45MTgsMC4xOTMtNC4zMjlzLTEuNTYyLTIuNTYzLTIuOTIxLTMuMjAxbC0yNy45LTEzLjAxaDYuNTAzYzMuMTgzLTAuNTg0LDYuMDYxLTIuMjY1LDguMTMyLTQuNzUxCiAgICBzMy4yMDYtNS42MiwzLjIwNi04Ljg1NmMwLTMuMjM2LTEuMTM0LTYuMzctMy4yMDYtOC44NTVzLTQuOTQ5LTQuMTY3LTguMTMyLTQuNzVIODguMzQyYy0xLjUwNCwwLTIuOTQ2LDAuNTk3LTQuMDA5LDEuNjYKICAgIGMtMS4wNjMsMS4wNjMtMS42NjEsMi41MDUtMS42NjEsNC4wMDl2MjIuNjc4YzAsMS41MDQsMC41OTcsMi45NDUsMS42NjEsNC4wMDljMS4wNjMsMS4wNjMsMi41MDUsMS42Niw0LjAwOSwxLjY2CiAgICBjMS41MDMsMCwyLjk0NS0wLjU5OCw0LjAwOS0xLjY2YzEuMDYzLTEuMDYzLDEuNjYtMi41MDUsMS42Ni00LjAwOVYxMy40NzZoMzEuNzQ4YzEuMjAzLDAsMi4zNTYsMC40NzgsMy4yMDcsMS4zMjgKICAgIHMxLjMyOSwyLjAwNCwxLjMyOSwzLjIwN2MwLDEuMjAzLTAuNDc4LDIuMzU2LTEuMzI5LDMuMjA3cy0yLjAwNCwxLjMyOS0zLjIwNywxLjMyOWgtMjIuNjc3Yy0xLjI5MSwwLTIuNTQzLDAuNDQtMy41NDksMS4yNDkKICAgIGMtMS4wMDYsMC44MDktMS43MDcsMS45MzYtMS45ODYsMy4xOTZzLTAuMTE5LDIuNTc5LDAuNDUzLDMuNzM2czEuNTIxLDIuMDg0LDIuNjkxLDIuNjI5Ii8+CgogIDwhLS0gTyDlrZcgLS0+CiAgPHBhdGggZmlsbD0idmFyKC0tYzEpIiBzdHJva2U9InZhcigtLXMxKSIgc3Ryb2tlLXdpZHRoPSJ2YXIoLS1zdykiCiAgICBkPSJNMTQ0Ljc1MSwyMS40MTNjMC00LjQ2MSwzLjM0NS04Ljc0LDkuMjk5LTExLjg5NXMxNC4wMjktNC45MjcsMjIuNDQ5LTQuOTI3czE2LjQ5NSwxLjc3MiwyMi40NDksNC45MjcKICAgIHM5LjI5OSw3LjQzNCw5LjI5OSwxMS44OTVzLTMuMzQ1LDguNzQtOS4yOTksMTEuODk2Yy01Ljk1NCwzLjE1NC0xNC4wMjksNC45MjctMjIuNDQ5LDQuOTI3cy0xNi40OTUtMS43NzItMjIuNDQ5LTQuOTI3CiAgICBDMTQ4LjA5NiwzMC4xNTMsMTQ0Ljc1MSwyNS44NzUsMTQ0Ljc1MSwyMS40MTMgTTE1Ni40NTIsMjEuNDEzYzAsMi42NTgsMi4xMTIsNS4yMDgsNS44NzEsNy4wODcKICAgIGMzLjc2MSwxLjg4LDguODU4LDIuOTM2LDE0LjE3NiwyLjkzNmM1LjMxNiwwLDEwLjQxNi0xLjA1NiwxNC4xNzUtMi45MzZjMy43Ni0xLjg4LDUuODcyLTQuNDI5LDUuODcyLTcuMDg3CiAgICBzLTIuMTEyLTUuMjA4LTUuODcyLTcuMDg3Yy0zLjc1OS0xLjg4LTguODU4LTIuOTM2LTE0LjE3NS0yLjkzNmMtNS4zMTcsMC0xMC40MTUsMS4wNTYtMTQuMTc2LDIuOTM2CiAgICBDMTU4LjU2NCwxNi4yMDUsMTU2LjQ1MiwxOC43NTUsMTU2LjQ1MiwyMS40MTMiLz4KCiAgPCEtLSBYIOWtlyAtLT4KICA8cGF0aCBmaWxsPSJ2YXIoLS1jMSkiIHN0cm9rZT0idmFyKC0tczEpIiBzdHJva2Utd2lkdGg9InZhcigtLXN3KSIKICAgIGQ9Ik0yNzQuMTQ3LDI3LjQ5M2MxLjM5NiwwLjU2MywyLjUwOSwxLjY1NiwzLjA5OCwzLjA0MWMwLjU4OSwxLjM4MywwLjYwMywyLjk0NCwwLjA0LDQuMzQKICAgIGMtMC41NjMsMS4zOTUtMS42NTUsMi41MDgtMy4wNCwzLjA5OGMtMS4zODQsMC41ODgtMi45NDQsMC42MDMtNC4zMzksMC4wNGwtMjcuMzYyLTEwLjk0M2wtMjcuNDY3LDEwLjk4NwogICAgYy0xLjExOSwwLjQyNC0yLjM0NSwwLjQ4NC0zLjUsMC4xN2MtMS4xNTYtMC4zMTQtMi4xODMtMC45ODctMi45MzMtMS45MjJjLTAuNzUxLTAuOTM0LTEuMTg2LTIuMDgtMS4yNDMtMy4yNzYKICAgIHMwLjI2NC0yLjM4MSwwLjkyMS0zLjM4M2MwLjY1Ni0xLjAwMSwxLjYxMi0xLjc3LDIuNzMyLTIuMTk1bDE2LjIyNi02LjQ4OWwtMTQuMTA0LTUuNjQxYy0xLjM4Mi0wLjU2OS0yLjQ4NC0xLjY2LTMuMDY1LTMuMDM2CiAgICBjLTAuNTgyLTEuMzc2LTAuNTk3LTIuOTI2LTAuMDQyLTQuMzEzczEuNjM1LTIuNSwzLjAwNS0zLjA5NXMyLjkyMS0wLjYyNiw0LjMxMy0wLjA4NWwyNS4xNjEsMTAuMDYzTDI2Ny42NTEsNC44MQogICAgYzEuMTEyLTAuNDQ1LDIuMzM3LTAuNTI3LDMuNDk3LTAuMjMzYzEuMTYyLDAuMjk0LDIuMiwwLjk0NywyLjk2NywxLjg2OGMwLjc2NywwLjkyLDEuMjIzLDIuMDYsMS4zMDIsMy4yNTQKICAgIGMwLjA3OSwxLjE5NS0wLjIyMiwyLjM4NS0wLjg2LDMuMzk4Yy0wLjYzOCwxLjAxNC0xLjU4MSwxLjc5OS0yLjY5MywyLjI0M2wtMTQuMDUxLDUuNjJMMjc0LjE0NywyNy40OTMiLz4KCjwvc3ZnPgo=";
@@ -454,7 +529,8 @@
     const screens = {
       home: document.getElementById("homeScreen"),
       calling: document.getElementById("callingScreen"),
-      map: document.getElementById("mapScreen")
+      map: document.getElementById("mapScreen"),
+      closed: document.getElementById("closedScreen")
     };
 
     const text = {
@@ -482,6 +558,143 @@
 
     function currentText() {
       return state.isEnglish ? text.en : text.ja;
+    }
+
+    function nthMonday(year, monthIndex, nth) {
+      const first = new Date(year, monthIndex, 1);
+      const offset = (8 - first.getDay()) % 7;
+      return 1 + offset + (nth - 1) * 7;
+    }
+
+    function vernalEquinoxDay(year) {
+      return Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+    }
+
+    function autumnEquinoxDay(year) {
+      return Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+    }
+
+    function dateKey(year, monthIndex, day) {
+      return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+
+    // 日本の祝日判定（2000年代以降の通常ルール＋近年の特例に対応）
+    function getJapaneseHolidays(year) {
+      const holidays = new Set();
+      const add = (monthIndex, day) => holidays.add(dateKey(year, monthIndex, day));
+
+      // 元日
+      add(0, 1);
+      // 成人の日：1月第2月曜
+      add(0, nthMonday(year, 0, 2));
+      // 建国記念の日
+      add(1, 11);
+      // 天皇誕生日（2020年以降）
+      if (year >= 2020) add(1, 23);
+      // 春分の日
+      add(2, vernalEquinoxDay(year));
+      // 昭和の日
+      add(3, 29);
+      // 憲法記念日・みどりの日・こどもの日
+      add(4, 3); add(4, 4); add(4, 5);
+
+      // 海の日・スポーツの日の東京五輪特例
+      if (year === 2020) {
+        add(6, 23);
+        add(6, 24);
+      } else if (year === 2021) {
+        add(6, 22);
+        add(6, 23);
+      } else {
+        // 海の日：7月第3月曜
+        add(6, nthMonday(year, 6, 3));
+        // スポーツの日：10月第2月曜
+        add(9, nthMonday(year, 9, 2));
+      }
+
+      // 山の日
+      if (year === 2020) add(7, 10);
+      else if (year === 2021) add(7, 8);
+      else if (year >= 2016) add(7, 11);
+
+      // 敬老の日：9月第3月曜
+      add(8, nthMonday(year, 8, 3));
+      // 秋分の日
+      add(8, autumnEquinoxDay(year));
+      // 文化の日・勤労感謝の日
+      add(10, 3); add(10, 23);
+
+      // 2019年の祝日特例
+      if (year === 2019) {
+        add(3, 30);
+        add(4, 1);
+        add(4, 2);
+        add(9, 22);
+      }
+
+      // 国民の休日：祝日に挟まれた平日を休日にする
+      for (let month = 0; month < 12; month++) {
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        for (let day = 2; day < daysInMonth; day++) {
+          const key = dateKey(year, month, day);
+          if (holidays.has(key)) continue;
+          const d = new Date(year, month, day);
+          if (d.getDay() === 0 || d.getDay() === 6) continue;
+          const prev = new Date(year, month, day - 1);
+          const next = new Date(year, month, day + 1);
+          if (holidays.has(dateKey(prev.getFullYear(), prev.getMonth(), prev.getDate())) &&
+              holidays.has(dateKey(next.getFullYear(), next.getMonth(), next.getDate()))) {
+            holidays.add(key);
+          }
+        }
+      }
+
+      // 振替休日：日曜日の祝日の次の平日（すでに祝日ならさらに後ろ）
+      const baseHolidays = Array.from(holidays);
+      baseHolidays.forEach(key => {
+        const [y, m, d] = key.split("-").map(Number);
+        const holidayDate = new Date(y, m - 1, d);
+        if (holidayDate.getDay() !== 0) return;
+        const substitute = new Date(holidayDate);
+        do {
+          substitute.setDate(substitute.getDate() + 1);
+        } while (holidays.has(dateKey(substitute.getFullYear(), substitute.getMonth(), substitute.getDate())));
+        holidays.add(dateKey(substitute.getFullYear(), substitute.getMonth(), substitute.getDate()));
+      });
+
+      return holidays;
+    }
+
+    function isBusinessOpen(now = new Date()) {
+      const day = now.getDay();
+      if (day === 0 || day === 6) return false;
+
+      const holidays = getJapaneseHolidays(now.getFullYear());
+      if (holidays.has(dateKey(now.getFullYear(), now.getMonth(), now.getDate()))) return false;
+
+      const minutes = now.getHours() * 60 + now.getMinutes();
+      return minutes >= BUSINESS_START_MINUTES && minutes < BUSINESS_END_MINUTES;
+    }
+
+    let wasBusinessOpen = null;
+
+    function applyBusinessHours(force = false) {
+      const open = isBusinessOpen();
+      if (!force && open === wasBusinessOpen) return;
+      wasBusinessOpen = open;
+
+      clearAutoReturn();
+
+      const fullscreenButton = document.getElementById("fullscreenButton");
+      fullscreenButton.style.display = "grid";
+
+      if (open) {
+        showScreen("home");
+        fullscreenButton.classList.remove("closed-mode");
+      } else {
+        showScreen("closed");
+        fullscreenButton.classList.add("closed-mode");
+      }
     }
 
     function showScreen(name) {
@@ -516,6 +729,7 @@
     }
 
     function returnToHome() {
+      if (!isBusinessOpen()) { applyBusinessHours(true); return; }
       clearAutoReturn();
       document.getElementById("errorText").classList.remove("visible");
       document.getElementById("errorText").textContent = "";
@@ -523,6 +737,7 @@
     }
 
     function openReception() {
+      if (!isBusinessOpen()) { applyBusinessHours(true); return; }
       // 先に画面を「ただいま対応中です」に切り替えます。
       // その後、同じタブ内でDialpadアプリを起動します。
       showScreen("calling");
@@ -564,6 +779,7 @@
     }
 
     function showMapGuide() {
+      if (!isBusinessOpen()) { applyBusinessHours(true); return; }
       showScreen("map");
       startAutoReturn(document.getElementById("mapCountdown"));
     }
@@ -627,14 +843,19 @@
     document.getElementById("fullscreenButton").addEventListener("click", toggleFullscreen);
 
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible" && state.autoReturnStartTime) {
-        const elapsed = (Date.now() - state.autoReturnStartTime) / 1000;
-        if (elapsed >= AUTO_RETURN_SECONDS) returnToHome();
+      if (document.visibilityState === "visible") {
+        applyBusinessHours(true);
+        if (state.autoReturnStartTime) {
+          const elapsed = (Date.now() - state.autoReturnStartTime) / 1000;
+          if (elapsed >= AUTO_RETURN_SECONDS) returnToHome();
+        }
       }
     });
 
     setupImages();
     applyLanguage();
+    applyBusinessHours(true);
+    window.setInterval(() => applyBusinessHours(false), BUSINESS_CHECK_INTERVAL_MS);
   </script>
 </body>
 </html>
